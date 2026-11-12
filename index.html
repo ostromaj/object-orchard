@@ -1,0 +1,1888 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Object Orchard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0b1618; --deep:#10262a; --moss:#1d4438; --leaf:#3f8f5f;
+  --amber:#e8a33d; --copper:#c96f3b; --cream:#efe3c6; --dim:#9fb0a6;
+  --berry:#c2414b; --plum:#8a3c7a; --teal:#3fb6a8; --ink:#081012;
+  --panel:rgba(12,26,28,.94); --line:rgba(239,227,198,.14);
+  --good:#4fc08d; --bad:#e0644f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--night);color:var(--cream);
+  font-family:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none}
+#app{position:fixed;inset:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hidden{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;
+  padding:10px 14px;pointer-events:none;gap:8px}
+#hud button{pointer-events:auto}
+.hud-left{min-width:110px}
+.hud-season{font-weight:700;font-size:15px;color:var(--amber)}
+.hud-timer{margin-top:6px;height:7px;width:110px;border-radius:5px;background:rgba(0,0,0,.4);overflow:hidden}
+.hud-timer div{height:100%;width:100%;background:linear-gradient(90deg,var(--copper),var(--amber));border-radius:5px}
+.hud-mid{text-align:center}
+#hudScore{font-size:28px;font-weight:800;letter-spacing:.5px;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.combo{font-size:14px;font-weight:700;color:var(--teal)}
+.hud-right{display:flex;align-items:center;gap:10px}
+#hudLeaves{display:flex;gap:3px}
+.leafi{width:18px;height:18px}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);font-weight:800}
+
+/* Screens */
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(6,14,15,.55);overflow-y:auto;touch-action:pan-y}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 20px;width:100%;max-width:440px;
+  box-shadow:0 20px 50px rgba(0,0,0,.5);text-align:center;margin:auto}
+h1{font-size:54px;line-height:.92;margin:6px 0 8px;font-weight:800;color:var(--amber)}
+h2{margin:0 0 14px;font-size:26px;color:var(--amber)}
+h3{margin:6px 0 14px;font-size:18px;font-weight:700;line-height:1.3}
+.logo-kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:700}
+.tag{margin:0 0 18px;color:var(--dim)}
+.field{display:block;text-align:left;margin-bottom:12px}
+.field span{font-size:13px;color:var(--dim)}
+.field input{width:100%;margin-top:4px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);
+  background:#081315;color:var(--cream);font:inherit;font-size:16px;touch-action:auto}
+.seg{display:flex;background:#081315;border-radius:12px;padding:4px;border:1px solid var(--line)}
+.seg button{flex:1;padding:9px;border:0;border-radius:9px;background:none;font-weight:700;color:var(--dim)}
+.seg button.on{background:var(--moss);color:var(--cream)}
+.seg.small{max-width:200px;margin:0 auto 12px}
+.seg-note{font-size:13px;color:var(--dim);margin:8px 0 16px;min-height:34px}
+.btn{display:inline-block;padding:11px 18px;border-radius:12px;border:0;background:var(--amber);color:#1e1408;font-weight:800;font-size:16px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.big{width:100%;padding:14px;font-size:20px}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--cream);font-weight:700}
+.row{display:flex;gap:10px;margin-top:10px}
+.row .btn{flex:1}
+.best{color:var(--dim);font-size:14px;margin:12px 0 0}
+.fine{font-size:12px;color:var(--dim)}
+ol.how{text-align:left;padding-left:20px;line-height:1.45}
+ol.how li{margin-bottom:8px}
+.board{list-style:none;padding:0;margin:0 0 10px;text-align:left}
+.board li{display:flex;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line)}
+.board li b{color:var(--amber)}
+.final{font-size:56px;font-weight:800;color:var(--amber)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.stats div{background:#081315;border-radius:10px;padding:8px;font-size:13px;color:var(--dim)}
+.stats b{display:block;font-size:20px;color:var(--cream)}
+
+/* Bench */
+.panel.bench{max-width:720px;text-align:left}
+.bench-top{display:flex;justify-content:space-between;font-size:12px;color:var(--teal);font-weight:700;letter-spacing:.5px}
+.bench-tier{color:var(--amber)}
+.code{background:#071012;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:"JetBrains Mono",monospace;
+  font-size:13.5px;line-height:1.6;overflow-x:auto;white-space:pre;margin-bottom:12px}
+.kw{color:#e39a5a}.str{color:#9cc77a}.cm{color:#6f8580;font-style:italic}.num{color:#c99be0}.ty{color:#6cc6d6}
+.chip{display:inline-block;padding:9px 12px;margin:4px;border-radius:10px;background:#183236;border:1px solid var(--line);
+  font-size:14px;line-height:1.25;text-align:left}
+.chip.code{display:inline-block;white-space:normal;padding:9px 12px;margin:4px;font-size:13px;background:#183236;line-height:1.25}
+.chip.sel{outline:2px solid var(--amber);background:#2a3a2a}
+.chip.ok{border-color:var(--good);background:#16372b}
+.chip.no{border-color:var(--bad);background:#3a1d1a}
+.chip .fix{display:block;font-size:11px;color:var(--amber);margin-top:3px;font-family:"Bricolage Grotesque",sans-serif}
+.pool{min-height:52px;margin-bottom:10px}
+.buckets{display:grid;gap:10px}
+.bucket{border:2px dashed rgba(239,227,198,.22);border-radius:12px;padding:8px;min-height:80px;background:rgba(0,0,0,.18)}
+.bucket h4{margin:0 0 4px;font-size:14px;color:var(--amber)}
+.bucket.target{border-color:var(--amber)}
+.blank{display:inline-block;min-width:54px;padding:0 6px;border-bottom:2px solid var(--amber);color:var(--amber);text-align:center;cursor:pointer}
+.blank.active{background:rgba(232,163,61,.18)}
+.blank.ok{border-color:var(--good);color:var(--good)}
+.blank.no{border-color:var(--bad);color:var(--bad)}
+.bank{margin-bottom:6px}
+.line{display:block;padding:1px 6px;border-radius:6px;cursor:pointer}
+.line:hover{background:rgba(232,163,61,.10)}
+.line.skip{cursor:default}
+.line.skip:hover{background:none}
+.line.ok{background:rgba(79,192,141,.22)}
+.line.no{background:rgba(224,100,79,.25)}
+.uml{max-width:380px;margin:0 auto 12px;border:2px solid var(--cream);border-radius:4px;background:#0a1416;font-family:"JetBrains Mono",monospace;font-size:14px}
+.uml .uh{text-align:center;font-weight:700;padding:8px;border-bottom:2px solid var(--cream)}
+.uml .ur{display:flex;align-items:center;gap:8px;padding:6px 8px}
+.uml .usep{border-top:2px solid var(--cream)}
+.vis{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#183236;font-weight:800;font-size:18px;flex:none}
+.vis.ok{border-color:var(--good)}.vis.no{border-color:var(--bad);color:var(--bad)}
+.note{display:block;font-size:11px;color:var(--dim);font-family:"Bricolage Grotesque",sans-serif}
+.slots{display:flex;flex-wrap:wrap;gap:6px;min-height:52px;padding:6px;border:2px dashed rgba(239,227,198,.22);border-radius:12px;margin-bottom:10px}
+.slots .chip{margin:0}
+.slot-num{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--amber);color:#1e1408;font-size:12px;font-weight:800;margin-right:6px}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.match .chip{display:block;margin:0;width:100%}
+.feedback{margin-top:12px;padding:12px;border-radius:12px;line-height:1.4;font-size:15px}
+.feedback.good{background:rgba(79,192,141,.14);border:1px solid var(--good)}
+.feedback.bad{background:rgba(224,100,79,.12);border:1px solid var(--bad)}
+.feedback b{display:block;font-size:17px;margin-bottom:4px}
+.bench-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+
+/* Perks */
+.perks{display:grid;gap:10px}
+.perk{display:flex;gap:12px;align-items:center;text-align:left;padding:12px;border-radius:14px;background:#122a2d;border:1px solid var(--line)}
+.perk .pi{font-size:30px;width:44px;text-align:center}
+.perk b{display:block;color:var(--amber)}
+.perk span{font-size:13px;color:var(--dim)}
+
+@media (min-width:700px){
+  .buckets.b2{grid-template-columns:1fr 1fr}
+  .buckets.b3{grid-template-columns:1fr 1fr 1fr}
+}
+
+.cmeter{width:96px;height:5px;margin:4px auto 0;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden}
+#hudMeter{height:100%;width:0;background:var(--teal);transition:width .15s}
+#hudMeter.m3,#hudMeter.m4{background:#5fd0c0}
+#hudMeter.m5{background:var(--amber)}
+.bench-tier{padding:2px 8px;border-radius:20px;background:rgba(232,163,61,.15)}
+.bench-tier[data-t="1"]{color:var(--good);background:rgba(79,192,141,.14)}
+.bench-tier[data-t="3"]{color:var(--bad);background:rgba(224,100,79,.14)}
+.screen:not(.hidden) .panel{animation:rise .35s ease-out}
+@keyframes rise{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+@media (max-width:430px){.code{font-size:12px;padding:8px 9px}.chip.code{font-size:12px}h3{font-size:17px}}
+
+.skins-h{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
+.skins{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.skin{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px 5px;border-radius:10px;border:1px solid var(--line);background:#081315;width:62px}
+.skin.on{border-color:var(--amber);background:#1a2a20}
+.skin.locked{opacity:.55;cursor:default}
+.skin .sw{display:block;width:40px;height:18px;border-radius:2px 2px 10px 10px}
+.skin .sn{font-size:10.5px;color:var(--dim);line-height:1.1}
+.unlock{margin:8px 0 0;color:var(--cream);font-size:14px}
+.unlock b{color:var(--amber)}
+.feedback .lit{display:block;font-size:13px;color:var(--amber);margin-bottom:4px}
+.code{white-space:pre-wrap;overflow-wrap:anywhere}
+.board li.me{background:rgba(232,163,61,.12);border-radius:8px}
+
+.how3{display:grid;gap:10px;text-align:left;margin-bottom:10px}
+.how3>div{display:flex;gap:12px;align-items:center;background:#081315;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.how3 p{margin:0;line-height:1.35}
+.hi{flex:none;width:42px;height:42px;border-radius:10px;background:#183236;display:grid;place-items:center;font-size:22px}
+.hi.null{font:800 13px "JetBrains Mono",monospace;color:#e3d6ef;border:2px dashed #b9a7cc;background:rgba(60,52,72,.55)}
+.bench-tag small{color:var(--dim);font-weight:500;margin-left:6px}
+.check-hint{align-self:center;margin-right:auto;font-size:13px;color:var(--dim)}
+.review{text-align:left;margin:10px 0;max-height:220px;overflow-y:auto}
+.review h4{margin:0 0 6px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--dim)}
+.review div{background:#081315;border-left:3px solid var(--bad);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px;line-height:1.4}
+.review div b{display:block;color:var(--cream);font-size:13px}
+.rank{margin:8px 0 0;font-size:14px;color:var(--cream)}
+.rank b{color:var(--amber)}
+.rank .bar{height:6px;border-radius:4px;background:#081315;margin:5px auto 0;max-width:260px;overflow:hidden}
+.rank .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--leaf),var(--amber))}
+.mastery{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:10px}
+.mastery span{font:700 10.5px "JetBrains Mono",monospace;padding:4px 6px;border-radius:7px;background:#081315;border:1px solid var(--line);color:var(--dim)}
+.mastery span.m1{border-color:#5d7a52;color:#b9cf9d}
+.mastery span.m2{border-color:var(--leaf);color:#cfe8c9;background:#12301f}
+.mastery span.m3{border-color:var(--amber);color:#1e1408;background:var(--amber)}
+.bench-tier.golden{color:#1e1408!important;background:var(--amber)!important}
+</style>
+
+<div id="app">
+  <canvas id="cv"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-left">
+      <div class="hud-season" id="hudSeason">Season 1</div>
+      <div class="hud-timer"><div id="hudTimer"></div></div>
+    </div>
+    <div class="hud-mid">
+      <div id="hudScore">0</div>
+      <div id="hudCombo" class="combo">x1</div>
+      <div class="cmeter"><div id="hudMeter"></div></div>
+    </div>
+    <div class="hud-right">
+      <div id="hudLeaves"></div>
+      <button id="btnPause" class="icon-btn" aria-label="Pause">II</button>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <section id="scrTitle" class="screen">
+    <div class="panel title-panel">
+      <div class="logo">
+        <span class="logo-kicker">IB CS · B3 OOP</span>
+        <h1>Object<br>Orchard</h1>
+        <p class="tag">Trees are classes. Fruit are objects. Grow the best orchard.</p>
+      </div>
+      <label class="field">
+        <span>Your name</span>
+        <input id="inName" maxlength="16" placeholder="e.g. Maya R." autocomplete="off">
+      </label>
+      <div class="seg" role="group" aria-label="Level">
+        <button id="segSL" class="on">SL</button>
+        <button id="segHL">HL</button>
+      </div>
+      <p class="seg-note" id="segNote">SL: classes, objects, UML, static, constructors, encapsulation.</p>
+      <button id="btnPlay" class="btn big">Play</button>
+      <div class="row">
+        <button id="btnHow" class="btn ghost">How to play</button>
+        <button id="btnBoard" class="btn ghost">Leaderboard</button>
+      </div>
+      <p class="best" id="bestLine"></p>
+      <div class="rank" id="rankLine"></div>
+      <div class="mastery" id="mastery"></div>
+      <div class="skins-h">Basket</div>
+      <div id="skinRow" class="skins"></div>
+    </div>
+  </section>
+
+  <!-- How to -->
+  <section id="scrHow" class="screen hidden">
+    <div class="panel">
+      <h2>How to play</h2>
+      <div class="how3">
+        <div><span class="hi">🧺</span><p><b>Catch fruit.</b> Drag or use ← →. Fruit in a row = combo (up to ×5).</p></div>
+        <div><span class="hi null">null</span><p><b>Dodge <code>null</code>.</b> Catching one costs a leaf.</p></div>
+        <div><span class="hi">🌳</span><p><b>Solve the bench.</b> After each season, one OOP puzzle. Right = points + a perk. Wrong = −1 leaf.</p></div>
+      </div>
+      <p class="fine">0 leaves = run over. Every season is faster and the puzzles get harder.</p>
+      <button class="btn" data-back>Back</button>
+    </div>
+  </section>
+
+  <!-- Leaderboard -->
+  <section id="scrBoard" class="screen hidden">
+    <div class="panel">
+      <h2>Class Leaderboard</h2>
+      <div class="seg small" id="boardSeg">
+        <button data-m="SL" class="on">SL</button>
+        <button data-m="HL">HL</button>
+      </div>
+      <ol id="boardList" class="board"></ol>
+      <p class="fine">Scores are saved on this device.</p>
+      <button class="btn" data-back>Back</button>
+    </div>
+  </section>
+
+  <!-- Bench (question) -->
+  <section id="scrBench" class="screen hidden">
+    <div class="panel bench">
+      <div class="bench-top">
+        <span class="bench-tag" id="qTopic"></span>
+        <span class="bench-tier" id="qTier"></span>
+      </div>
+      <h3 id="qPrompt"></h3>
+      <div id="qBody"></div>
+      <div id="qFeedback" class="feedback hidden"></div>
+      <div class="bench-actions">
+        <span id="checkHint" class="check-hint"></span>
+        <button id="btnCheck" class="btn" disabled>Check</button>
+        <button id="btnNext" class="btn hidden">Continue</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Perk -->
+  <section id="scrPerk" class="screen hidden">
+    <div class="panel">
+      <h2>Pick a perk</h2>
+      <div id="perkList" class="perks"></div>
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <section id="scrPause" class="screen hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <button id="btnResume" class="btn big">Resume</button>
+      <div class="row">
+        <button id="btnMute" class="btn ghost">Sound: on</button>
+        <button id="btnQuit" class="btn ghost">Quit run</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Game over -->
+  <section id="scrOver" class="screen hidden">
+    <div class="panel">
+      <h2>Orchard closed</h2>
+      <div class="final" id="finalScore">0</div>
+      <p id="finalBest" class="best"></p>
+      <div class="rank" id="finalRank"></div>
+      <p id="finalUnlock" class="unlock"></p>
+      <div class="stats" id="finalStats"></div>
+      <div class="review hidden" id="finalReview"></div>
+      <p id="finalName" class="fine"></p>
+      <button id="btnAgain" class="btn big">Play again</button>
+      <div class="row">
+        <button id="btnOverBoard" class="btn ghost">Leaderboard</button>
+        <button id="btnMenu" class="btn ghost">Menu</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* Object Orchard — question bank (IB CS 2027, topic B3: Object-oriented programming)
+   lvl: "SL" = B3.1 (SL + HL)   "HL" = B3.2 (HL only)
+   tier: 1 easy · 2 medium · 3 hard
+   Code is Java-style (IB allows Java or Python; Java shows access modifiers explicitly).
+   Blanks in "fill" code are written as {0}, {1}, ... */
+
+const QUESTIONS = [
+  /* ───────────── B3.1.1 classes vs objects ───────────── */
+  {
+    id: "cls-obj", lvl: "SL", tier: 1, topic: "B3.1.1 Class vs object", type: "sort",
+    prompt: "Sort each card: is it about the CLASS (the blueprint) or an OBJECT (an instance)?",
+    buckets: ["Class 🌳", "Object 🍎"],
+    items: [
+      { t: "Template that defines attributes and methods", b: 0 },
+      { t: "Has its own values for the attributes", b: 1 },
+      { t: "new Tree(5)", b: 1, code: true },
+      { t: "public class Tree { … }", b: 0, code: true },
+      { t: "Written once in the source code", b: 0 },
+      { t: "Can be created many times while the program runs", b: 1 }
+    ],
+    explain: "A class is the blueprint (written once). Each object is an instance made from it with new, with its own attribute values."
+  },
+  {
+    id: "attr-meth", lvl: "SL", tier: 1, topic: "B3.1.2 Attributes & methods", type: "sort",
+    prompt: "class BankAccount — sort into ATTRIBUTES (data) and METHODS (behaviour).",
+    buckets: ["Attribute", "Method"],
+    items: [
+      { t: "balance", b: 0, code: true },
+      { t: "deposit(amount)", b: 1, code: true },
+      { t: "owner", b: 0, code: true },
+      { t: "getBalance()", b: 1, code: true },
+      { t: "accountNumber", b: 0, code: true },
+      { t: "withdraw(amount)", b: 1, code: true }
+    ],
+    explain: "Attributes store an object's state (its data). Methods are the actions an object can perform."
+  },
+  {
+    id: "encap-student", lvl: "SL", tier: 1, topic: "B3.1.5 Encapsulation", type: "toggle",
+    prompt: "Tap + / − to encapsulate Student: hide the data, keep the methods other classes need public.",
+    cls: "Student",
+    rows: [
+      { t: "name : String", ans: "-", attr: true },
+      { t: "grade : int", ans: "-", attr: true },
+      { t: "getName() : String", ans: "+" },
+      { t: "getGrade() : int", ans: "+" },
+      { t: "setGrade(g : int) : void", ans: "+" }
+    ],
+    explain: "Encapsulation: attributes are private (−) so only the class can change them; public (+) getters and setters control access."
+  },
+  {
+    id: "fill-ctor", lvl: "SL", tier: 1, topic: "B3.1.4 Constructors", type: "fill",
+    prompt: "Complete the constructor, then create a Fruit object.",
+    code: [
+      "public class Fruit {",
+      "  private String name;",
+      "  private int weight;",
+      "  public {0}(String n, int w) {",
+      "    this.{1} = n;",
+      "    weight = w;",
+      "  }",
+      "}",
+      "Fruit f = {2} Fruit(\"plum\", 40);"
+    ],
+    answers: ["Fruit", "name", "new"],
+    bank: ["Fruit", "name", "new", "void", "return", "weight", "static"],
+    explain: "A constructor has the same name as the class and no return type. new creates the object and calls the constructor."
+  },
+  {
+    id: "pick-private", lvl: "SL", tier: 1, topic: "B3.1.5 Information hiding", type: "pick",
+    prompt: "This code is in Main (a different class). Tap the line that will NOT compile.",
+    lines: [
+      "public class Lamp {",
+      "  private boolean on;",
+      "  public void toggle() { on = !on; }",
+      "  public boolean isOn() { return on; }",
+      "}",
+      "// --- in Main ---",
+      "Lamp l = new Lamp();",
+      "l.toggle();",
+      "System.out.println(l.on);",
+      "System.out.println(l.isOn());"
+    ],
+    ans: 8, skip: [0, 4, 5],
+    explain: "on is private, so Main can't read l.on. It has to use the public getter l.isOn()."
+  },
+  {
+    id: "pick-ctor", lvl: "SL", tier: 1, topic: "B3.1.4 Constructors", type: "pick",
+    prompt: "Tap the CONSTRUCTOR.",
+    lines: [
+      "public class Tree {",
+      "  private int height;",
+      "  public Tree(int h) {",
+      "    height = h;",
+      "  }",
+      "  public int getHeight() {",
+      "    return height;",
+      "  }",
+      "  public void grow() { height++; }",
+      "}"
+    ],
+    ans: 2, skip: [0, 3, 4, 6, 7, 9],
+    explain: "The constructor has the class's name (Tree) and no return type. It runs when new Tree(…) is called."
+  },
+  {
+    id: "pick-new", lvl: "SL", tier: 1, topic: "B3.1.4 Instantiation", type: "pick",
+    prompt: "Tap the line that INSTANTIATES (creates) an object.",
+    lines: [
+      "Tree t;",
+      "t = new Tree(4);",
+      "t.grow();",
+      "int h = t.getHeight();",
+      "System.out.println(h);"
+    ],
+    ans: 1,
+    explain: "Tree t; only declares a variable (a reference). new Tree(4) actually creates the object in memory."
+  },
+  {
+    id: "match-uml", lvl: "SL", tier: 1, topic: "B3.1.2 UML class diagrams", type: "match",
+    prompt: "Match each UML line to its meaning.",
+    pairs: [
+      ["- age : int", "private attribute, type int"],
+      ["+ getName() : String", "public method that returns a String"],
+      ["+ Dog(n : String)", "public constructor"],
+      ["+ bark() : void", "public method that returns nothing"]
+    ],
+    codeLeft: true,
+    explain: "In UML: + public, − private. Attributes are name : type. Methods show (parameters) : return type. A constructor has the class's name."
+  },
+  /* ───────────── B3.1.3 static vs instance ───────────── */
+  {
+    id: "static-sort", lvl: "SL", tier: 2, topic: "B3.1.3 Static vs instance", type: "sort",
+    prompt: "Sort each card: STATIC (belongs to the class) or INSTANCE (belongs to each object)?",
+    buckets: ["Static", "Instance"],
+    items: [
+      { t: "One copy shared by every object", b: 0 },
+      { t: "Each object gets its own copy", b: 1 },
+      { t: "Math.sqrt(9)", b: 0, code: true },
+      { t: "s1.getName()", b: 1, code: true },
+      { t: "private static int count;", b: 0, code: true },
+      { t: "private String name;", b: 1, code: true }
+    ],
+    explain: "Static members belong to the class itself (one shared copy, called on the class name). Instance members belong to each object."
+  },
+  {
+    id: "static-count", lvl: "SL", tier: 2, topic: "B3.1.3 Static variables", type: "fill",
+    prompt: "What does this print?",
+    code: [
+      "public class Seed {",
+      "  public static int count = 0;",
+      "  public Seed() { count++; }",
+      "}",
+      "new Seed();",
+      "new Seed();",
+      "Seed s = new Seed();",
+      "System.out.println(Seed.count);",
+      "// output: {0}"
+    ],
+    answers: ["3"],
+    bank: ["0", "1", "3", "error"],
+    explain: "count is static, so all Seeds share ONE counter. Three objects were made, so it is 3."
+  },
+  {
+    id: "getter-fill", lvl: "SL", tier: 2, topic: "B3.1.5 Getters", type: "fill",
+    prompt: "Finish the getter for the private weight attribute.",
+    code: [
+      "public class Pear {",
+      "  private int weight;",
+      "  public {0} getWeight() {",
+      "    {1} weight;",
+      "  }",
+      "}"
+    ],
+    answers: ["int", "return"],
+    bank: ["int", "return", "void", "String", "new", "private"],
+    explain: "A getter returns the attribute's value, so its return type matches the attribute (int) and it uses return."
+  },
+  {
+    id: "uml-build", lvl: "SL", tier: 2, topic: "B3.1.2 UML class diagrams", type: "sort",
+    prompt: "Build the UML class box: put each card in the right section.",
+    buckets: ["Class name", "Attributes", "Methods"],
+    uml: true,
+    items: [
+      { t: "Book", b: 0, code: true },
+      { t: "- title : String", b: 1, code: true },
+      { t: "- price : double", b: 1, code: true },
+      { t: "+ Book(t : String, p : double)", b: 2, code: true },
+      { t: "+ getPrice() : double", b: 2, code: true },
+      { t: "+ setPrice(p : double) : void", b: 2, code: true }
+    ],
+    explain: "A UML class box has three compartments: name on top, attributes in the middle, methods (including the constructor) at the bottom."
+  },
+  {
+    id: "new-order", lvl: "SL", tier: 2, topic: "B3.1.4 Instantiation", type: "order",
+    prompt: "Tree t = new Tree(3);  — tap the steps in the order they happen.",
+    seq: [
+      "Memory for a new Tree object is allocated",
+      "The constructor Tree(3) runs and sets the attributes",
+      "A reference to the object is stored in t"
+    ],
+    extra: [],
+    explain: "new allocates the object, then the constructor initialises it, then the reference is assigned to the variable t."
+  },
+  {
+    id: "encap-bank", lvl: "SL", tier: 2, topic: "B3.1.5 Encapsulation", type: "toggle",
+    prompt: "Tap + / − to encapsulate Account: hide the data AND the internal helper, keep the rest public.",
+    cls: "Account",
+    rows: [
+      { t: "balance : double", ans: "-", attr: true },
+      { t: "pin : int", ans: "-", attr: true },
+      { t: "deposit(a : double) : void", ans: "+" },
+      { t: "getBalance() : double", ans: "+" },
+      { t: "isValidAmount(a : double) : boolean", note: "only used inside deposit()", ans: "-" }
+    ],
+    explain: "Data stays private. A helper that's only used inside the class should be private too: information hiding means exposing only what others need."
+  },
+  {
+    id: "build-class", lvl: "SL", tier: 2, topic: "B3.1.4 Defining classes", type: "order",
+    prompt: "Tap the lines in order to build a working class.",
+    seq: [
+      "public class Seed {",
+      "  private int size;",
+      "  public Seed(int s) {",
+      "    size = s;",
+      "  }  // end constructor",
+      "}  // end class"
+    ],
+    extra: [],
+    code: true,
+    explain: "Class header, then attributes, then the constructor (header, body, closing brace), then the class's closing brace."
+  },
+  {
+    id: "ref-alias", lvl: "SL", tier: 3, topic: "B3.1.4 Objects & references", type: "fill",
+    prompt: "add(n) does count += n, and count starts at 0. What is printed?",
+    code: [
+      "Basket a = new Basket();",
+      "Basket b = a;",
+      "b.add(3);",
+      "a.add(2);",
+      "System.out.println(a.getCount());",
+      "// output: {0}"
+    ],
+    answers: ["5"],
+    bank: ["0", "2", "3", "5"],
+    explain: "b = a copies the REFERENCE, not the object. a and b point to the same Basket, so both adds hit it: 3 + 2 = 5."
+  },
+  {
+    id: "eq-ref", lvl: "SL", tier: 3, topic: "B3.1.4 Objects & references", type: "fill",
+    prompt: "Two objects with the same values. What does == print?",
+    code: [
+      "Tree a = new Tree(2);",
+      "Tree b = new Tree(2);",
+      "System.out.println(a == b);",
+      "// output: {0}"
+    ],
+    answers: ["false"],
+    bank: ["true", "false", "2", "error"],
+    explain: "new was called twice, so these are two different objects. == on objects compares references (memory locations), not values."
+  },
+  {
+    id: "setter-fill", lvl: "SL", tier: 3, topic: "B3.1.5 Setters & validation", type: "fill",
+    prompt: "Setter rule: only accept ages that are NOT negative.",
+    code: [
+      "public class Cat {",
+      "  private int age;",
+      "  public void setAge(int a) {",
+      "    if (a {0} 0) {",
+      "      {1} = a;",
+      "    }",
+      "  }",
+      "}"
+    ],
+    answers: [">=", "this.age"],
+    bank: [">=", "<", "==", "this.age", "a", "getAge()"],
+    explain: "a >= 0 lets 0 and positive ages through. this.age refers to the object's private attribute. A setter can validate before changing data, which is a big reason for encapsulation."
+  },
+  {
+    id: "static-pick", lvl: "SL", tier: 3, topic: "B3.1.3 Static vs instance", type: "pick",
+    prompt: "Tap the line that will NOT compile.",
+    lines: [
+      "public class Tree {",
+      "  private int height;",
+      "  private static int total = 0;",
+      "  public static int getTotal() {",
+      "    return total;",
+      "  }",
+      "  public static int getHeight() {",
+      "    return height;",
+      "  }",
+      "}"
+    ],
+    ans: 7, alsoOk: [6], skip: [0, 5, 8, 9],
+    explain: "A static method belongs to the class, not to any object, so it can't use the instance attribute height. (It could use static total.)"
+  },
+  {
+    id: "encap-why", lvl: "SL", tier: 2, topic: "B3.1.5 Encapsulation", type: "sort",
+    prompt: "Which statements are TRUE about encapsulation?",
+    buckets: ["True ✔", "False ✘"],
+    items: [
+      { t: "It stops other classes changing data directly", b: 0 },
+      { t: "Setters can validate data before storing it", b: 0 },
+      { t: "Internal code can change without breaking other classes", b: 0 },
+      { t: "It makes every attribute public", b: 1 },
+      { t: "Private attributes can't be used by the class's own methods", b: 1 }
+    ],
+    explain: "Encapsulation bundles data with methods and hides the data. The class's own methods CAN use private attributes; other classes go through public methods."
+  },
+
+  /* ───────────── HL ONLY: B3.2 multiple classes ───────────── */
+  {
+    id: "graft-match", lvl: "HL", tier: 1, topic: "B3.2.1 Inheritance", type: "match",
+    prompt: "Graft each subclass onto its superclass (an \"is-a\" link).",
+    pairs: [
+      ["Robin", "Bird"],
+      ["SavingsAccount", "BankAccount"],
+      ["Circle", "Shape"],
+      ["Truck", "Vehicle"]
+    ],
+    codeLeft: true, codeRight: true,
+    explain: "A subclass inherits from a superclass when it IS A more specific kind of it: a Robin is a Bird."
+  },
+  {
+    id: "isa-hasa", lvl: "HL", tier: 1, topic: "B3.2.1 / B3.2.4 is-a vs has-a", type: "sort",
+    prompt: "Inheritance (IS-A) or aggregation/composition (HAS-A)?",
+    buckets: ["is-a", "has-a"],
+    items: [
+      { t: "An Apple is a Fruit", b: 0 },
+      { t: "A Tree has Branches", b: 1 },
+      { t: "A Teacher is a Person", b: 0 },
+      { t: "A Car has an Engine", b: 1 },
+      { t: "A Robin is a Bird", b: 0 },
+      { t: "An Orchard has Trees", b: 1 }
+    ],
+    explain: "is-a → inheritance (extends). has-a → one object contains/refers to others (aggregation or composition)."
+  },
+  {
+    id: "extends-fill", lvl: "HL", tier: 1, topic: "B3.2.1 Inheritance", type: "fill",
+    prompt: "Make Pear inherit from Fruit and call Fruit's constructor.",
+    code: [
+      "public class Pear {0} Fruit {",
+      "  public Pear(int w) {",
+      "    {1}(w);",
+      "  }",
+      "}"
+    ],
+    answers: ["extends", "super"],
+    bank: ["extends", "super", "implements", "this", "new", "inherits"],
+    explain: "extends sets up inheritance. super(w) calls the superclass (Fruit) constructor so the inherited attributes get set up."
+  },
+  {
+    id: "agg-comp", lvl: "HL", tier: 2, topic: "B3.2.4 Aggregation vs composition", type: "sort",
+    prompt: "Aggregation (the part can exist on its own) or composition (the part is destroyed with the whole)?",
+    buckets: ["Aggregation ◇", "Composition ◆"],
+    items: [
+      { t: "Team – Player", b: 0 },
+      { t: "House – Room", b: 1 },
+      { t: "Playlist – Song", b: 0 },
+      { t: "Order – OrderLine", b: 1 },
+      { t: "UML: hollow diamond", b: 0 },
+      { t: "UML: filled diamond", b: 1 }
+    ],
+    explain: "Aggregation: a weak has-a; a Player still exists if the Team is deleted (hollow ◇). Composition: a strong has-a; Rooms don't exist without their House (filled ◆)."
+  },
+  {
+    id: "poly-out", lvl: "HL", tier: 2, topic: "B3.2.2 Polymorphism", type: "order",
+    prompt: "Tap the outputs in the order they print. (One card is a decoy.)",
+    pre: [
+      "class Fruit {",
+      "  String taste() { return \"plain\"; }",
+      "}",
+      "class Lemon extends Fruit {",
+      "  String taste() { return \"sour\"; }",
+      "}",
+      "class Fig extends Fruit {",
+      "  String taste() { return \"sweet\"; }",
+      "}",
+      "Fruit[] box = { new Fig(),",
+      "                new Fruit(),",
+      "                new Lemon() };",
+      "for (Fruit f : box)",
+      "  System.out.println(f.taste());"
+    ],
+    seq: ["sweet", "plain", "sour"],
+    extra: ["error"],
+    code: true,
+    explain: "Polymorphism: each element's ACTUAL class decides which taste() runs: Fig → sweet, Fruit → plain, Lemon → sour."
+  },
+  {
+    id: "dyn-type", lvl: "HL", tier: 2, topic: "B3.2.2 Polymorphism", type: "fill",
+    prompt: "Lemon extends Fruit and overrides taste(). What prints?",
+    code: [
+      "// Fruit.taste() returns \"plain\"",
+      "// Lemon.taste() returns \"sour\"",
+      "Fruit f = new Lemon();",
+      "System.out.println(f.taste());",
+      "// output: {0}"
+    ],
+    answers: ["sour"],
+    bank: ["plain", "sour", "error", "null"],
+    explain: "The variable type is Fruit, but the object is a Lemon. At runtime the overriding Lemon.taste() runs: dynamic dispatch."
+  },
+  {
+    id: "override-pick", lvl: "HL", tier: 2, topic: "B3.2.2 Overriding vs overloading", type: "pick",
+    prompt: "Tap the line that OVERRIDES a superclass method.",
+    lines: [
+      "class Bird {",
+      "  void sing() { /* tweet */ }",
+      "}",
+      "class Robin extends Bird {",
+      "  void sing(int times) { /* … */ }",
+      "  void sing() { /* trill */ }",
+      "  void fly() { /* … */ }",
+      "}"
+    ],
+    ans: 5, skip: [0, 2, 3, 7],
+    explain: "Overriding = same name AND same parameters as the superclass method. sing(int) has different parameters, so it OVERLOADS instead."
+  },
+  {
+    id: "abstract-pick", lvl: "HL", tier: 3, topic: "B3.2.3 Abstraction", type: "pick",
+    prompt: "Tap the line that will NOT compile.",
+    lines: [
+      "abstract class Shape {",
+      "  abstract double area();",
+      "}",
+      "class Circle extends Shape {",
+      "  double r;",
+      "  Circle(double r) { this.r = r; }",
+      "  double area() { return 3.14 * r * r; }",
+      "}",
+      "Shape a = new Circle(2);",
+      "Shape b = new Shape();",
+      "double x = a.area();"
+    ],
+    ans: 9, skip: [0, 2, 3, 7],
+    explain: "An abstract class can't be instantiated. You can use Shape as a variable type, but you must create a concrete subclass like Circle."
+  },
+  {
+    id: "super-order", lvl: "HL", tier: 3, topic: "B3.2.1 Inheritance & constructors", type: "order",
+    prompt: "new C(); runs. Tap the letters in the order they print. (One card is a decoy.)",
+    pre: [
+      "class A {",
+      "  A() { System.out.print(\"A\"); }",
+      "}",
+      "class B extends A {",
+      "  B() { System.out.print(\"B\"); }",
+      "}",
+      "class C extends B {",
+      "  C() { System.out.print(\"C\"); }",
+      "}",
+      "new C();"
+    ],
+    seq: ["A", "B", "C"],
+    extra: ["CBA"],
+    code: true,
+    explain: "Each constructor calls its superclass constructor (super() is added automatically) before running its own body, so the chain prints from the top: A, then B, then C."
+  },
+  {
+    id: "patterns", lvl: "HL", tier: 3, topic: "B3.2.5 Design patterns", type: "match",
+    prompt: "Match each design pattern to what it does.",
+    pairs: [
+      ["Singleton", "Only one instance ever exists, reached via getInstance()"],
+      ["Factory", "A method creates and returns objects so callers don't use new"],
+      ["Observer", "Objects subscribe and are notified when another object changes"]
+    ],
+    codeLeft: false,
+    explain: "Singleton: one shared instance. Factory: hides object creation. Observer: a subject notifies its listeners of changes."
+  },
+  {
+    id: "abstract-sort", lvl: "HL", tier: 3, topic: "B3.2.3 Abstract classes", type: "sort",
+    prompt: "abstract class Shape — which are TRUE?",
+    buckets: ["True ✔", "False ✘"],
+    items: [
+      { t: "It can have abstract methods with no body", b: 0 },
+      { t: "Subclasses must implement its abstract methods (or be abstract too)", b: 0 },
+      { t: "It can be used as a variable type: Shape s", b: 0 },
+      { t: "You can write new Shape()", b: 1 },
+      { t: "It can't have any normal (non-abstract) methods", b: 1 }
+    ],
+    explain: "Abstract classes can mix abstract and normal methods, act as a type, and force subclasses to fill in the abstract methods, but can't be instantiated."
+  },
+  {
+    id: "poly-sort", lvl: "HL", tier: 2, topic: "B3.2.2 Overriding vs overloading", type: "sort",
+    prompt: "Overriding or overloading?",
+    buckets: ["Overriding", "Overloading"],
+    items: [
+      { t: "Subclass replaces a superclass method, same parameters", b: 0 },
+      { t: "Same method name, different parameter lists", b: 1 },
+      { t: "Which version runs is decided at runtime by the object's class", b: 0 },
+      { t: "add(int a) and add(int a, int b) in one class", b: 1 }
+    ],
+    explain: "Overriding = subclass redefines an inherited method (same signature), chosen at runtime. Overloading = same name, different parameters, chosen at compile time."
+  },
+  /* ───────────── added in v4 ───────────── */
+  {
+    id: "inst-fill", lvl: "SL", tier: 1, topic: "B3.1.4 Instantiation", type: "fill",
+    prompt: "Declare a Tree variable and create a Tree object with height 10.",
+    code: ["{0} oak = {1} Tree(10);"],
+    answers: ["Tree", "new"],
+    bank: ["Tree", "new", "tree", "class", "void", "this"],
+    explain: "The variable's type is the class name (Tree, with a capital T). new Tree(10) creates the object and runs the constructor."
+  },
+  {
+    id: "obj-count", lvl: "SL", tier: 2, topic: "B3.1.4 Objects & references", type: "fill",
+    prompt: "How many Tree OBJECTS exist after this code runs?",
+    code: [
+      "Tree a = new Tree(1);",
+      "Tree b = new Tree(2);",
+      "Tree c = a;",
+      "Tree d;",
+      "// objects created: {0}"
+    ],
+    answers: ["2"],
+    bank: ["1", "2", "3", "4"],
+    explain: "Only new creates objects, and it runs twice. c = a copies a reference to the same object, and d is just an empty (null) variable."
+  },
+  {
+    id: "ctor-truth", lvl: "SL", tier: 2, topic: "B3.1.4 Constructors", type: "sort",
+    prompt: "Constructors: true or false?",
+    buckets: ["True ✔", "False ✘"],
+    items: [
+      { t: "It has the same name as the class", b: 0 },
+      { t: "It has no return type, not even void", b: 0 },
+      { t: "It runs automatically when new is used", b: 0 },
+      { t: "You must call it yourself after creating the object", b: 1 },
+      { t: "A class can only ever have one constructor", b: 1 }
+    ],
+    explain: "A constructor shares the class name, has no return type, and runs when new creates the object. A class may have several constructors with different parameters."
+  },
+  {
+    id: "code-uml", lvl: "SL", tier: 3, topic: "B3.1.2 UML class diagrams", type: "match",
+    prompt: "Match each line of Java to its UML version.",
+    pairs: [
+      ["private double price;", "- price : double"],
+      ["public double getPrice()", "+ getPrice() : double"],
+      ["public void setPrice(double p)", "+ setPrice(p : double) : void"],
+      ["public static int count;", "+ count : int  (underlined)"]
+    ],
+    codeLeft: true, codeRight: true,
+    explain: "private → −, public → +. UML writes name : type, and methods end with : returnType. Static members are underlined in UML."
+  },
+  {
+    id: "shadow-pick", lvl: "SL", tier: 3, topic: "B3.1.4 Constructors", type: "pick",
+    prompt: "This compiles, but new Plum(5) leaves size at 0. Tap the buggy line.",
+    lines: [
+      "public class Plum {",
+      "  private int size;",
+      "  public Plum(int size) {",
+      "    size = size;",
+      "  }",
+      "  public int getSize() {",
+      "    return size;",
+      "  }",
+      "}"
+    ],
+    ans: 3, skip: [0, 4, 7, 8],
+    explain: "The parameter is also called size, so size = size just copies the parameter onto itself. Fix: this.size = size; (this. means the object's attribute)."
+  },
+  {
+    id: "super-call", lvl: "HL", tier: 2, topic: "B3.2.1 Inheritance", type: "fill",
+    prompt: "new Lemon().info() should return \"fruit/lemon\". Fill the blank.",
+    code: [
+      "class Fruit {",
+      "  String info() { return \"fruit\"; }",
+      "}",
+      "class Lemon extends Fruit {",
+      "  String info() {",
+      "    return {0}.info() + \"/lemon\";",
+      "  }",
+      "}"
+    ],
+    answers: ["super"],
+    bank: ["super", "this", "Fruit", "new"],
+    explain: "super.info() runs the superclass (Fruit) version from inside the override. this.info() would call Lemon's info() again, forever."
+  },
+  {
+    id: "abstract-fill", lvl: "HL", tier: 3, topic: "B3.2.3 Abstraction", type: "fill",
+    prompt: "Make Animal abstract and make Cow a subclass of it.",
+    code: [
+      "public {0} class Animal {",
+      "  public abstract String sound();",
+      "}",
+      "public class Cow {1} Animal {",
+      "  public String sound() { return \"moo\"; }",
+      "}"
+    ],
+    answers: ["abstract", "extends"],
+    bank: ["abstract", "extends", "static", "implements", "final", "private"],
+    explain: "A class with an abstract method must itself be abstract. Cow extends Animal and must give sound() a body."
+  },
+  {
+    id: "comp-code", lvl: "HL", tier: 3, topic: "B3.2.4 Aggregation vs composition", type: "sort",
+    prompt: "Which relationship does each clue point to?",
+    buckets: ["Aggregation ◇", "Composition ◆"],
+    items: [
+      { t: "Car() { engine = new Engine(); }", b: 1, code: true },
+      { t: "void addPlayer(Player p) { players.add(p); }", b: 0, code: true },
+      { t: "When the Car is destroyed, its Engine goes too", b: 1 },
+      { t: "The same Player can be on two Teams", b: 0 }
+    ],
+    explain: "Composition: the whole creates and owns its parts, which share its lifetime. Aggregation: the whole just refers to parts that were made elsewhere and can outlive it or be shared."
+  }
+];
+
+if (typeof module !== "undefined") module.exports = QUESTIONS;
+
+</script>
+<script>
+/* Object Orchard — game engine */
+(() => {
+"use strict";
+
+/* ---------- storage (safe) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const KW = "public|private|protected|class|new|return|void|static|extends|implements|super|this|abstract|if|else|for|while|true|false|null|boolean|int|double|char";
+const TOK = new RegExp(`(\\/\\/.*$)|("[^"]*")|\\b(${KW})\\b|\\b([A-Z][A-Za-z]*)\\b|\\b(\\d+(?:\\.\\d+)?)\\b`, "g");
+function hl(src) {
+  let out = "", last = 0;
+  src.replace(TOK, (m, cm, str, kw, ty, num, idx) => {
+    out += esc(src.slice(last, idx));
+    if (cm) out += `<span class="cm">${esc(cm)}</span>`;
+    else if (str) out += `<span class="str">${esc(str)}</span>`;
+    else if (kw) out += `<span class="kw">${kw}</span>`;
+    else if (ty) out += `<span class="ty">${ty}</span>`;
+    else out += `<span class="num">${num}</span>`;
+    last = idx + m.length;
+    return m;
+  });
+  return out + esc(src.slice(last));
+}
+
+/* ---------- audio ---------- */
+let actx = null, muted = store.get("oo_muted", false);
+function audio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return actx; }
+function tone(freq, dur = 0.12, type = "sine", vol = 0.12, slide = 0) {
+  if (muted) return; const a = audio(); if (!a) return;
+  const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+const sfx = {
+  catch(c) { tone(440 * Math.pow(2, Math.min(c, 24) / 12), 0.1, "triangle", 0.1); },
+  gold() { tone(880, 0.1, "triangle", 0.1); setTimeout(() => tone(1320, 0.14, "triangle", 0.08), 70); },
+  bad() { tone(160, 0.25, "sawtooth", 0.06, -80); },
+  miss() { tone(220, 0.08, "sine", 0.05); },
+  right() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.16, "triangle", 0.09), i * 80)); },
+  wrong() { tone(233, 0.18, "square", 0.04); setTimeout(() => tone(185, 0.25, "square", 0.04), 140); },
+  tap() { tone(660, 0.04, "sine", 0.05); }
+};
+
+/* ---------- canvas ---------- */
+const cv = $("cv"), ctx = cv.getContext("2d");
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  buildScenery();
+}
+window.addEventListener("resize", resize);
+
+/* scenery (static random bits) */
+let stars = [], flies = [], blades = [], canopies = [], bgTrees = [];
+function buildScenery() {
+  stars = Array.from({ length: Math.round(W * H / 9000) }, () => ({ x: Math.random() * W, y: Math.random() * H * 0.5, r: rand(0.4, 1.3), p: Math.random() * 6 }));
+  flies = Array.from({ length: 14 }, () => ({ x: Math.random() * W, y: rand(H * 0.3, H * 0.85), p: Math.random() * 6, s: rand(0.3, 0.8) }));
+  blades = Array.from({ length: Math.round(W / 5) }, (_, i) => ({ x: i * 5 + rand(-2, 2), h: rand(6, 18), p: Math.random() * 6, c: Math.random() < 0.5 }));
+  // leafy canopy: many overlapping clusters, fixed per resize
+  canopies = TREES.map((t, i) => {
+    const { r } = treeGeom(i), blobs = [];
+    for (let k = 0; k < 26; k++) {
+      const a = rand(0, Math.PI * 2), d = Math.sqrt(Math.random()) * r * 0.85;
+      blobs.push({ dx: Math.cos(a) * d * 1.15, dy: Math.sin(a) * d * 0.8, s: rand(0.28, 0.46) * r });
+    }
+    blobs.sort((a, b) => a.dy - b.dy);
+    const deco = Array.from({ length: 5 }, () => { const a = rand(0, Math.PI * 2), d = rand(0.3, 0.8) * r; return { dx: Math.cos(a) * d, dy: Math.sin(a) * d * 0.6 + r * 0.1 }; });
+    return { blobs, deco };
+  });
+  bgTrees = Array.from({ length: Math.ceil(W / 70) + 1 }, (_, i) => ({ x: i * 70 + rand(-20, 20), h: rand(0.6, 1.1), r: rand(26, 40) }));
+}
+
+/* ---------- layout ---------- */
+const TREES = [
+  { cls: "Apple", color: "#c2414b", hi: "#e0725f" },
+  { cls: "Pear", color: "#a3b23c", hi: "#cdd56a" },
+  { cls: "Plum", color: "#7a3a8c", hi: "#a865b5" }
+];
+function treeGeom(i) {
+  const spread = Math.min(0.33, 400 / Math.max(W, 1));
+  const x = W * (0.5 + (i - 1) * spread);
+  const r = clamp(Math.min(W * spread * 0.62, H * 0.13), 50, 120);
+  return { x, y: H * 0.2, r };
+}
+const groundY = () => H - clamp(H * 0.09, 50, 80);
+
+/* ---------- game state ---------- */
+let mode = store.get("oo_mode", "SL");
+let G = null;      // current run
+let screen = "title";
+let paused = false;
+
+const PERKS = [
+  { id: "wide", icon: "🧺", name: "Wider Basket", desc: "Basket is 25% wider." },
+  { id: "magnet", icon: "🧲", name: "Ripe Magnet", desc: "Good fruit drift toward your basket." },
+  { id: "leaf", icon: "🍃", name: "New Leaf", desc: "+1 leaf (life). Max 5." },
+  { id: "gold", icon: "✨", name: "Golden Grove", desc: "More golden fruit (worth 5×)." },
+  { id: "slow", icon: "🐌", name: "Slow Season", desc: "Fruit fall 12% slower." },
+  { id: "keeper", icon: "🔗", name: "Combo Keeper", desc: "One missed fruit per season won't break your combo." },
+  { id: "shield", icon: "🛡️", name: "Null Guard", desc: "Blocks the next null fruit you catch." }
+];
+
+function newRun() {
+  G = {
+    score: 0, season: 0, leaves: 3, combo: 0, maxCombo: 0, mult: 1,
+    perks: { wide: 0, magnet: 0, gold: 0, slow: 0, keeper: 0, shield: 0 },
+    keeperLeft: 0,
+    fruits: [], parts: [], pops: [], rings: [], pile: [], splats: [], petals: [], fever: 0, lastCount: 0,
+    basket: { x: W / 2, tx: W / 2, wob: 0 },
+    timeLeft: 0, dur: 18, spawnT: 0, phase: "harvest",
+    used: new Set(), missed: [], bestAtStart: store.get("oo_best_" + mode, 0), passedBest: false, correct: 0, asked: 0, caught: 0, benchStreak: 0, shake: 0, objId: 1
+  };
+}
+
+function seasonParams(s) {
+  return {
+    spawn: Math.max(0.26, 0.85 - 0.07 * (s - 1)),
+    g: H * (0.42 + 0.06 * (s - 1)) * Math.pow(0.88, G.perks.slow),
+    nullP: Math.min(0.34, 0.08 + 0.03 * (s - 1)),
+    goldP: 0.035 + 0.03 * G.perks.gold,
+    wind: s >= 4 ? Math.min(1, (s - 3) * 0.25) : 0,
+    bumper: s % 3 === 0
+  };
+}
+const basketW = () => clamp(W * 0.2, 90, 160) * (1 + 0.25 * G.perks.wide);
+const basketY = () => groundY() - 26;
+
+function startSeason() {
+  G.season++;
+  G.phase = "harvest";
+  G.dur = 18;
+  G.timeLeft = G.dur;
+  G.spawnT = 0.6;
+  G.keeperLeft = G.perks.keeper;
+  G.seasonCaught = 0;
+  G.P = seasonParams(G.season);
+  if (G.P.bumper) { G.P.spawn *= 0.62; G.P.goldP *= 3; }
+  showScreen(null);
+  $("hud").classList.remove("hidden");
+  banner(`Season ${G.season}`, G.season === 1 ? "Catch fruit · dodge null" : G.P.bumper ? "Bumper crop! Extra gold" : G.P.wind && G.season === 4 ? "The wind picks up…" : "Faster fruit!");
+  updateHUD();
+}
+
+/* ---------- fruit ---------- */
+function spawnFruit() {
+  const ti = Math.floor(Math.random() * TREES.length);
+  const tg = treeGeom(ti);
+  const a = rand(0, Math.PI * 2), d = rand(0.2, 0.75) * tg.r;
+  let kind = "fruit";
+  const r = Math.random();
+  if (r < G.P.nullP) kind = "null";
+  else if (r < G.P.nullP + G.P.goldP) kind = "gold";
+  G.fruits.push({
+    kind, tree: ti, x: tg.x + Math.cos(a) * d, y: tg.y + Math.sin(a) * d * 0.7,
+    vx: 0, vy: 0, r: clamp(Math.min(W, H * 0.7) * 0.045, 17, 26), ripe: 0, rot: rand(-0.3, 0.3), vr: rand(-2, 2),
+    id: G.objId++, sway: Math.random() * 6
+  });
+  const nf = G.fruits[G.fruits.length - 1];
+  if (G.season <= 3 || Math.random() < 0.35) pop(clamp(nf.x, 50, W - 50), nf.y - 26, kind === "null" ? "null" : `new ${TREES[ti].cls}()`, kind === "null" ? "#b9a7cc" : "rgba(239,227,198,0.75)", 0.62, true);
+}
+
+function catchFruit(f) {
+  const t = TREES[f.tree];
+  if (f.kind === "null") {
+    if (G.perks.shield > 0) {
+      G.perks.shield--;
+      pop(f.x, f.y - 20, "Null Guard!", "#3fb6a8");
+      burst(f.x, f.y, "#3fb6a8", 14);
+      sfx.tap();
+      return;
+    }
+    G.leaves--; G.combo = 0; G.mult = 1; G.shake = 0.35;
+    try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
+    pop(f.x, f.y - 20, "NullPointerException!", "#e0644f", 1.2);
+    burst(f.x, f.y, "#5b5566", 16);
+    sfx.bad();
+    if (G.leaves <= 0) { endRun(); }
+    updateHUD();
+    return;
+  }
+  G.combo++; G.maxCombo = Math.max(G.maxCombo, G.combo); G.caught++; G.seasonCaught++;
+  G.mult = Math.min(5, 1 + Math.floor(G.combo / 5));
+  const base = f.kind === "gold" ? 50 : 10;
+  const pts = base * G.mult;
+  G.score += pts;
+  if (!G.passedBest && G.bestAtStart > 0 && G.score > G.bestAtStart) { G.passedBest = true; banner("NEW BEST!", "keep going…"); sfx.right(); }
+  const col = f.kind === "gold" ? "#e8b23d" : t.color;
+  pop(f.x, f.y - 16, `+${pts}`, f.kind === "gold" ? "#f0c35a" : "#efe3c6");
+  if (G.mult >= 5 && G.combo === 20) { banner("FULL BLOOM", "x5 points · keep the streak alive"); sfx.gold(); }
+  if (G.combo % 5 === 0) { pop(G.basket.x, basketY() - 50, `Combo x${G.mult}!`, "#3fb6a8", 1.1); G.rings.push({ x: G.basket.x, y: basketY(), r: 10, a: 1 }); }
+  burst(f.x, f.y, col, f.kind === "gold" ? 20 : 10);
+  G.basket.wob = 1;
+  G.pile.push(f.kind === "gold" ? -1 : f.tree); if (G.pile.length > 9) G.pile.shift();
+  f.kind === "gold" ? sfx.gold() : sfx.catch(G.combo);
+  updateHUD();
+}
+
+function missFruit(f) {
+  if (f.kind === "null") return;
+  G.splats.push({ x: clamp(f.x, 10, W - 10), col: f.kind === "gold" ? "#e0a92e" : TREES[f.tree].color, a: 1, s: f.r });
+  if (G.keeperLeft > 0) { G.keeperLeft--; pop(f.x, H - 90, "Combo kept", "#3fb6a8"); return; }
+  if (G.combo >= 3) { pop(f.x, H - 90, "combo lost", "#9fb0a6"); sfx.miss(); }
+  G.combo = 0; G.mult = 1;
+  updateHUD();
+}
+
+/* ---------- particles ---------- */
+function burst(x, y, col, n) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), s = rand(60, 220);
+    G.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: rand(0.4, 0.8), t: 0, col, r: rand(2, 4.5) });
+  }
+}
+function pop(x, y, text, col, size = 1, small = false) { const m = Math.min(W / 2, 30 + text.length * 5 * size); G.pops.push({ x: clamp(x, m, W - m), y, text, col, t: 0, size, small }); }
+
+let bannerT = 0, bannerA = "", bannerB = "";
+function banner(a, b) { bannerA = a; bannerB = b; bannerT = 2.0; }
+
+/* ---------- input ---------- */
+const keys = {};
+window.addEventListener("keydown", e => {
+  keys[e.key] = true;
+  if ((e.key === "p" || e.key === "Escape") && screen === "play") togglePause();
+  if (e.key === "Enter" && screen === "bench") {
+    if (!$("btnNext").classList.contains("hidden")) afterBench();
+    else if (!$("btnCheck").disabled && !$("btnCheck").classList.contains("hidden")) check();
+  }
+});
+window.addEventListener("keyup", e => { keys[e.key] = false; });
+function pointerX(e) { if (G && screen === "play" && !paused) G.basket.tx = e.clientX; }
+cv.addEventListener("pointerdown", e => { pointerX(e); audio(); });
+cv.addEventListener("pointermove", pointerX);
+
+/* ---------- update ---------- */
+function update(dt) {
+  if (!G || screen !== "play" || paused) return;
+  const b = G.basket, bw = basketW();
+  const kv = (keys.ArrowLeft || keys.a || keys.A ? -1 : 0) + (keys.ArrowRight || keys.d || keys.D ? 1 : 0);
+  if (kv) b.tx = b.x + kv * W * 1.4 * dt * 4;
+  b.tx = clamp(b.tx, bw / 2, W - bw / 2);
+  b.x += (b.tx - b.x) * Math.min(1, dt * 18);
+  b.wob = Math.max(0, b.wob - dt * 4);
+
+  if (G.phase === "harvest") {
+    G.timeLeft -= dt;
+    const cd = Math.ceil(G.timeLeft);
+    if (cd <= 3 && cd >= 1 && cd !== G.lastCount) { G.lastCount = cd; pop(W / 2, H * 0.5, String(cd), "rgba(232,163,61,0.85)", 2.6); sfx.tap(); }
+    G.spawnT -= dt;
+    if (G.spawnT <= 0 && G.timeLeft > 1.2) { spawnFruit(); G.spawnT = G.P.spawn * rand(0.7, 1.3); }
+    if (G.timeLeft <= 0 && G.fruits.every(f => f.ripe < 1 || f.y > H)) {
+      G.fruits = [];
+      G.phase = "bench";
+      banner("Harvest in!", `${G.seasonCaught} object${G.seasonCaught === 1 ? "" : "s"} collected`);
+      sfx.gold();
+      setTimeout(openBench, 1400);
+    }
+  }
+
+  const by = basketY();
+  for (const f of G.fruits) {
+    if (f.ripe < 1) { f.ripe += dt * 1.6; continue; }
+    f.vy += G.P.g * dt;
+    if (G.P.wind) f.vx = Math.sin(performance.now() / 600 + f.sway) * 60 * G.P.wind;
+    if (G.perks.magnet && f.kind !== "null" && f.y > H * 0.45) f.vx += (b.x - f.x) * 1.4 * G.perks.magnet * dt * 4;
+    f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt;
+    if (!f.done && f.vy > 0 && f.y + f.r * 0.6 >= by && f.y - f.r < by + 20 && Math.abs(f.x - b.x) < bw / 2 + f.r * 0.4) {
+      f.done = true; catchFruit(f);
+    } else if (!f.done && f.y - f.r > H) { f.done = true; missFruit(f); }
+  }
+  G.fruits = G.fruits.filter(f => !f.done);
+  for (const f of G.fruits) if (f.kind === "gold" && f.ripe >= 1 && Math.random() < dt * 30) G.parts.push({ x: f.x + rand(-6, 6), y: f.y, vx: rand(-15, 15), vy: rand(-30, 0), life: 0.5, t: 0, col: "#f6d77a", r: rand(1.5, 2.5) });
+
+  for (const p of G.parts) { p.t += dt; p.vy += 500 * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+  G.parts = G.parts.filter(p => p.t < p.life);
+  for (const p of G.pops) { p.t += dt; p.y -= (p.small ? 18 : 40) * dt; }
+  for (const s of G.splats) s.a -= dt * 0.35;
+  G.splats = G.splats.filter(s => s.a > 0);
+  G.fever = clamp(G.fever + (G.mult >= 5 ? dt : -dt) * 2, 0, 1);
+  if (G.fever > 0.2 && Math.random() < dt * 14 * G.fever) G.petals.push({ x: rand(0, W), y: -10, vx: rand(-20, 20), vy: rand(40, 90), r: rand(2.5, 5), p: rand(0, 6), c: Math.random() < 0.5 ? "#e8a33d" : "#d98a6a" });
+  for (const q of G.petals) { q.y += q.vy * dt; q.x += (q.vx + Math.sin(q.y * 0.03 + q.p) * 30) * dt; }
+  G.petals = G.petals.filter(q => q.y < H + 10);
+  G.pops = G.pops.filter(p => p.t < 1.1);
+  for (const r of G.rings) { r.r += 260 * dt; r.a -= dt * 1.8; }
+  G.rings = G.rings.filter(r => r.a > 0);
+  G.shake = Math.max(0, G.shake - dt);
+  if (bannerT > 0) bannerT -= dt;
+  $("hudTimer").style.width = `${clamp(G.timeLeft / G.dur, 0, 1) * 100}%`;
+}
+
+/* ---------- draw ---------- */
+function drawSky(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#08141a"); g.addColorStop(0.55, "#0f2a2b"); g.addColorStop(1, "#132f25");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (const s of stars) {
+    ctx.globalAlpha = 0.35 + 0.25 * Math.sin(t * 1.2 + s.p);
+    ctx.fillStyle = "#d9cfae"; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // moon
+  const mx = W * 0.86, my = H * 0.1, mr = clamp(W * 0.04, 18, 34);
+  const mg = ctx.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 4);
+  mg.addColorStop(0, "rgba(232,190,110,0.22)"); mg.addColorStop(1, "rgba(232,190,110,0)");
+  ctx.fillStyle = mg; ctx.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
+  ctx.fillStyle = "#e6cf98"; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 7); ctx.fill();
+  ctx.fillStyle = "rgba(180,150,90,0.35)";
+  ctx.beginPath(); ctx.arc(mx - mr * 0.3, my - mr * 0.2, mr * 0.22, 0, 7); ctx.arc(mx + mr * 0.35, my + mr * 0.3, mr * 0.15, 0, 7); ctx.fill();
+  // hills
+  hill(H * 0.6, 40, 0.004, "#0d2224", 0);
+}
+function hill(base, amp, freq, col, ph) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x += 12) ctx.lineTo(x, base + Math.sin(x * freq + ph) * amp + Math.sin(x * freq * 2.7 + ph) * amp * 0.3);
+  ctx.lineTo(W, H); ctx.fill();
+}
+function drawBgTrees() {
+  const base = H * 0.66;
+  ctx.fillStyle = "#0c2021";
+  for (const b of bgTrees) {
+    ctx.fillRect(b.x - 3, base - b.r * b.h * 1.4, 6, b.r * b.h * 1.6);
+    ctx.beginPath(); ctx.arc(b.x, base - b.r * b.h * 1.6, b.r * b.h, 0, 7); ctx.arc(b.x - b.r * 0.5, base - b.r * b.h * 1.3, b.r * b.h * 0.7, 0, 7); ctx.arc(b.x + b.r * 0.5, base - b.r * b.h * 1.3, b.r * b.h * 0.7, 0, 7); ctx.fill();
+  }
+}
+function drawTrunk(i) {
+  const { x, y, r } = treeGeom(i), gy = groundY(), w = r * 0.17;
+  const g = ctx.createLinearGradient(x - w, 0, x + w, 0);
+  g.addColorStop(0, "#2c1b10"); g.addColorStop(0.6, "#4a2f1b"); g.addColorStop(1, "#5f3d22");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(x - w * 2.2, gy + 4);
+  ctx.quadraticCurveTo(x - w, gy - 10, x - w, gy - (gy - y) * 0.35);
+  ctx.quadraticCurveTo(x - w * 1.2, y + r * 0.5, x - w * 0.7, y);
+  ctx.lineTo(x + w * 0.7, y);
+  ctx.quadraticCurveTo(x + w * 1.1, y + r * 0.5, x + w, gy - (gy - y) * 0.35);
+  ctx.quadraticCurveTo(x + w, gy - 10, x + w * 2.2, gy + 4);
+  ctx.fill();
+  ctx.strokeStyle = "#3b2618"; ctx.lineCap = "round";
+  ctx.lineWidth = w * 0.7;
+  ctx.beginPath(); ctx.moveTo(x, y + r * 0.55); ctx.quadraticCurveTo(x - r * 0.3, y + r * 0.35, x - r * 0.6, y + r * 0.1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x, y + r * 0.7); ctx.quadraticCurveTo(x + r * 0.35, y + r * 0.45, x + r * 0.65, y + r * 0.15); ctx.stroke();
+  ctx.strokeStyle = "rgba(20,12,6,0.5)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x - w * 0.3, gy - 6); ctx.quadraticCurveTo(x - w * 0.5, (gy + y) / 2, x - w * 0.2, y + r * 0.6);
+  ctx.moveTo(x + w * 0.35, gy - 20); ctx.quadraticCurveTo(x + w * 0.2, (gy + y) / 2 + 30, x + w * 0.4, y + r * 0.9); ctx.stroke();
+}
+function drawCanopy(i, t) {
+  const { x, y, r } = treeGeom(i), C = canopies[i]; if (!C) return;
+  const sw = Math.sin(t * 0.7 + i * 2) * 2;
+  const shades = ["#102e25", "#163b2e", "#1f4d39", "#2a6146"];
+  ctx.fillStyle = shades[0];
+  for (const b of C.blobs) { ctx.beginPath(); ctx.arc(x + b.dx + sw * 0.5, y + b.dy + b.s * 0.15, b.s, 0, 7); ctx.fill(); }
+  ctx.fillStyle = shades[1];
+  for (const b of C.blobs) { ctx.beginPath(); ctx.arc(x + b.dx + sw, y + b.dy, b.s * 0.86, 0, 7); ctx.fill(); }
+  ctx.fillStyle = shades[2];
+  for (const b of C.blobs) if (b.dy < r * 0.25) { ctx.beginPath(); ctx.arc(x + b.dx + sw + b.s * 0.12, y + b.dy - b.s * 0.18, b.s * 0.6, 0, 7); ctx.fill(); }
+  ctx.fillStyle = shades[3];
+  for (const b of C.blobs) if (b.dy < 0 && b.dx > -r * 0.2) { ctx.beginPath(); ctx.arc(x + b.dx + sw + b.s * 0.25, y + b.dy - b.s * 0.3, b.s * 0.28, 0, 7); ctx.fill(); }
+  const tc = TREES[i];
+  for (const d of C.deco) {
+    ctx.fillStyle = tc.color; ctx.beginPath(); ctx.arc(x + d.dx + sw, y + d.dy, r * 0.075, 0, 7); ctx.fill();
+    ctx.fillStyle = tc.hi; ctx.beginPath(); ctx.arc(x + d.dx + sw - r * 0.025, y + d.dy - r * 0.025, r * 0.025, 0, 7); ctx.fill();
+  }
+}
+function drawSign(i) {
+  const { x, y, r } = treeGeom(i), gy = groundY();
+  const label = `class ${TREES[i].cls}`;
+  const fs = clamp(r * 0.2, 11, 15);
+  ctx.font = `700 ${fs}px "JetBrains Mono", ui-monospace, monospace`;
+  const tw = ctx.measureText(label).width + 16, sh = fs + 12, sy = Math.min((y + r + gy) / 2, gy - 140);
+  ctx.fillStyle = "#6b4527"; roundRect(x - tw / 2, sy, tw, sh, 5); ctx.fill();
+  ctx.strokeStyle = "#8a5d36"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = "#2a1a10"; ctx.beginPath(); ctx.arc(x - tw / 2 + 6, sy + sh / 2, 1.8, 0, 7); ctx.arc(x + tw / 2 - 6, sy + sh / 2, 1.8, 0, 7); ctx.fill();
+  ctx.fillStyle = "#f3e2b8"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(label, x, sy + sh / 2 + 1);
+}
+function drawLanterns(t) {
+  const y0 = H * 0.2 + treeGeom(0).r * 0.75;
+  for (let i = 0; i < TREES.length - 1; i++) {
+    const a = treeGeom(i), b = treeGeom(i + 1);
+    const x1 = a.x + a.r * 0.15, x2 = b.x - b.r * 0.15, sag = 26;
+    ctx.strokeStyle = "rgba(30,20,12,0.9)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x1, y0); ctx.quadraticCurveTo((x1 + x2) / 2, y0 + sag * 2, x2, y0); ctx.stroke();
+    for (let k = 1; k <= 3; k++) {
+      const u = k / 4, lx = x1 + (x2 - x1) * u, ly = (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * (y0 + sag * 2) + u * u * y0;
+      const L = i * 3 + (k - 1), lit = !G || L < G.correct;
+      if (!lit) {
+        ctx.fillStyle = "#2a1a10"; ctx.fillRect(lx - 3, ly, 6, 3);
+        ctx.fillStyle = "#3a3329"; roundRect(lx - 5, ly + 3, 10, 12, 3); ctx.fill();
+        ctx.strokeStyle = "#57493a"; ctx.lineWidth = 1; ctx.stroke();
+        continue;
+      }
+      const fl = 0.75 + 0.25 * Math.sin(t * 3 + k * 1.7 + i);
+      const g = ctx.createRadialGradient(lx, ly + 8, 0, lx, ly + 8, 26);
+      g.addColorStop(0, `rgba(232,163,61,${0.35 * fl})`); g.addColorStop(1, "rgba(232,163,61,0)");
+      ctx.fillStyle = g; ctx.fillRect(lx - 26, ly - 18, 52, 52);
+      ctx.fillStyle = "#2a1a10"; ctx.fillRect(lx - 3, ly, 6, 3);
+      ctx.fillStyle = `rgb(${Math.round(200 + 30 * fl)},${Math.round(130 + 25 * fl)},50)`;
+      roundRect(lx - 5, ly + 3, 10, 12, 3); ctx.fill();
+    }
+  }
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+function drawGround(t) {
+  const gy = groundY();
+  const g = ctx.createLinearGradient(0, gy, 0, H);
+  g.addColorStop(0, "#1a3a24"); g.addColorStop(1, "#0f2417");
+  ctx.fillStyle = g; ctx.fillRect(0, gy, W, H - gy);
+  ctx.strokeStyle = "rgba(10,25,14,0.6)"; ctx.lineWidth = 2;
+  for (let k = 1; k < 4; k++) { const y = gy + (H - gy) * k / 4; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.strokeStyle = "#2a5a34"; ctx.beginPath();
+  for (const b of blades) if (b.c) { const s = Math.sin(t * 1.5 + b.p) * 2; ctx.moveTo(b.x, gy + 3); ctx.lineTo(b.x + s, gy - b.h * 0.6); }
+  ctx.stroke();
+  ctx.strokeStyle = "#214a2b"; ctx.beginPath();
+  for (const b of blades) if (!b.c) { const s = Math.sin(t * 1.5 + b.p) * 2; ctx.moveTo(b.x, gy + 3); ctx.lineTo(b.x + s, gy - b.h * 0.45); }
+  ctx.stroke();
+}
+function drawFlies(t) {
+  for (const f of flies) {
+    const x = f.x + Math.sin(t * f.s + f.p) * 30, y = f.y + Math.cos(t * f.s * 1.3 + f.p) * 20;
+    const a = 0.35 + 0.35 * Math.sin(t * 2 + f.p);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 10);
+    g.addColorStop(0, `rgba(232,190,90,${a})`); g.addColorStop(1, "rgba(232,190,90,0)");
+    ctx.fillStyle = g; ctx.fillRect(x - 10, y - 10, 20, 20);
+  }
+}
+function drawFruit(f) {
+  const s = f.ripe < 1 ? 0.3 + 0.7 * f.ripe : 1;
+  ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.scale(s, s);
+  const r = f.r;
+  if (f.kind === "null") {
+    // null = no object: a hollow, dashed outline where a fruit should be
+    ctx.fillStyle = "rgba(60,52,72,0.55)"; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
+    ctx.setLineDash([5, 4]); ctx.strokeStyle = "#b9a7cc"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.rotate(-f.rot);
+    ctx.fillStyle = "#e3d6ef"; ctx.font = `800 ${r * 0.62}px "JetBrains Mono", ui-monospace, monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("null", 0, 1);
+  } else {
+    const t = TREES[f.tree];
+    const col = f.kind === "gold" ? "#e0a92e" : t.color, hi = f.kind === "gold" ? "#f6d77a" : t.hi;
+    if (f.kind === "gold") {
+      const g = ctx.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 2.2);
+      g.addColorStop(0, "rgba(240,190,80,0.35)"); g.addColorStop(1, "rgba(240,190,80,0)");
+      ctx.fillStyle = g; ctx.fillRect(-r * 2.2, -r * 2.2, r * 4.4, r * 4.4);
+    }
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    if (t.cls === "Pear" && f.kind !== "gold") { ctx.ellipse(0, r * 0.25, r * 0.85, r * 0.8, 0, 0, 7); ctx.ellipse(0, -r * 0.35, r * 0.5, r * 0.55, 0, 0, 7); }
+    else if (t.cls === "Plum" && f.kind !== "gold") ctx.ellipse(0, 0, r * 0.85, r, 0.2, 0, 7);
+    else { ctx.arc(-r * 0.32, 0, r * 0.75, 0, 7); ctx.arc(r * 0.32, 0, r * 0.75, 0, 7); ctx.arc(0, r * 0.2, r * 0.8, 0, 7); }
+    ctx.fill();
+    ctx.fillStyle = hi; ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.ellipse(-r * 0.35, -r * 0.3, r * 0.2, r * 0.32, -0.5, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#3b2618"; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, -r * 0.6); ctx.lineTo(r * 0.1, -r * 1.05); ctx.stroke();
+    ctx.fillStyle = "#3f8f5f"; ctx.beginPath(); ctx.ellipse(r * 0.32, -r * 0.9, r * 0.32, r * 0.14, -0.5, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+const SKINS = [
+  { id: "wicker", name: "Wicker", need: 0, top: "#a06a32", bot: "#6e451f", rim: "#c48a48" },
+  { id: "copper", name: "Copper", need: 2500, top: "#c9783f", bot: "#7d3f1c", rim: "#e39a5a" },
+  { id: "moss", name: "Mossy", need: 6000, top: "#4f8a55", bot: "#264a2c", rim: "#7fb27a" },
+  { id: "plum", name: "Plum Lacquer", need: 9000, top: "#8a3c7a", bot: "#4a1d42", rim: "#b8679f" },
+  { id: "gold", name: "Harvest Gold", need: 14000, top: "#e0a92e", bot: "#8a5d12", rim: "#f6d77a" }
+];
+const bestEver = () => Math.max(store.get("oo_best_SL", 0), store.get("oo_best_HL", 0));
+let skinId = store.get("oo_skin", "wicker");
+const skin = () => SKINS.find(k => k.id === skinId && bestEver() >= k.need) || SKINS[0];
+function drawBasket(t) {
+  const b = G.basket, bw = basketW(), by = basketY(), h = 34;
+  const sq = 1 + b.wob * 0.12;
+  ctx.save(); ctx.translate(b.x, by); ctx.scale(sq, 2 - sq);
+  if (G.mult >= 3) {
+    const g = ctx.createRadialGradient(0, h * 0.3, 10, 0, h * 0.3, bw * 0.9);
+    const c = G.mult >= 5 ? "232,163,61" : "63,182,168";
+    g.addColorStop(0, `rgba(${c},${0.28 + 0.08 * Math.sin(t * 6)})`); g.addColorStop(1, `rgba(${c},0)`);
+    ctx.fillStyle = g; ctx.fillRect(-bw, h * 0.3 - bw, bw * 2, bw * 2);
+  }
+  ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.beginPath(); ctx.ellipse(0, h + 5, bw * 0.5, 7, 0, 0, 7); ctx.fill();
+  const pr = clamp(bw * 0.09, 8, 13);
+  G.pile.forEach((k, n) => {
+    const px = -bw / 2 + 16 + ((n * 0.37) % 1) * (bw - 32), py = -pr * 0.4 - (n % 3) * pr * 0.35;
+    const tc = TREES[k] || { color: "#e0a92e", hi: "#f6d77a" };
+    ctx.fillStyle = tc.color; ctx.beginPath(); ctx.arc(px, py, pr, 0, 7); ctx.fill();
+    ctx.fillStyle = tc.hi; ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.arc(px - pr * 0.3, py - pr * 0.3, pr * 0.3, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  });
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  const sk = skin();
+  bg.addColorStop(0, sk.top); bg.addColorStop(1, sk.bot);
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.moveTo(-bw / 2, 0); ctx.lineTo(bw / 2, 0); ctx.lineTo(bw / 2 - 12, h); ctx.quadraticCurveTo(0, h + 6, -bw / 2 + 12, h); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = "rgba(60,36,14,0.8)"; ctx.lineWidth = 2;
+  for (let i = 1; i < 4; i++) { const y = (h / 4) * i; ctx.beginPath(); ctx.moveTo(-bw / 2, y); ctx.lineTo(bw / 2, y); ctx.stroke(); }
+  ctx.strokeStyle = "rgba(200,150,90,0.35)";
+  for (let x = -bw / 2 + 8; x < bw / 2; x += 12) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x * 0.86, h + 6); ctx.stroke(); }
+  ctx.restore();
+  ctx.fillStyle = sk.rim; roundRect(-bw / 2 - 5, -7, bw + 10, 10, 5); ctx.fill();
+  ctx.fillStyle = "rgba(255,230,180,0.25)"; roundRect(-bw / 2 - 3, -6, bw + 6, 3, 2); ctx.fill();
+  ctx.restore();
+  if (G.season === 1 && G.dur - G.timeLeft < 4.5 && G.phase === "harvest") {
+    ctx.globalAlpha = Math.min(1, (4.5 - (G.dur - G.timeLeft)) * 1.5) * (0.7 + 0.3 * Math.sin(t * 5));
+    ctx.font = `800 16px "Bricolage Grotesque", system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#efe3c6"; ctx.fillText(matchMedia("(pointer:coarse)").matches ? "◀  drag  ▶" : "◀  mouse or arrow keys  ▶", b.x, by - 60);
+    ctx.globalAlpha = 1;
+  }
+}
+function drawGroundFX() {
+  const gy = groundY();
+  for (const s of G.splats) {
+    ctx.globalAlpha = s.a * 0.8; ctx.fillStyle = s.col;
+    ctx.beginPath(); ctx.ellipse(s.x, gy + 6, s.s * 1.1, s.s * 0.32, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s.x - s.s * 0.9, gy + 2, s.s * 0.18, 0, 7); ctx.arc(s.x + s.s, gy + 4, s.s * 0.14, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  for (const f of G.fruits) {
+    if (f.ripe < 1 || f.kind === "null") continue;
+    const k = clamp((f.y - H * 0.2) / (gy - H * 0.2), 0, 1);
+    ctx.fillStyle = `rgba(0,0,0,${0.12 + 0.25 * k})`;
+    ctx.beginPath(); ctx.ellipse(f.x, gy + 4, f.r * (0.4 + 0.6 * k), f.r * 0.18, 0, 0, 7); ctx.fill();
+  }
+}
+function drawFever(t) {
+  if (G.fever <= 0) return;
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+  g.addColorStop(0, "rgba(232,163,61,0)"); g.addColorStop(1, `rgba(232,163,61,${0.16 * G.fever})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (const q of G.petals) { ctx.fillStyle = q.c; ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.y * 0.02 + q.p); ctx.beginPath(); ctx.ellipse(0, 0, q.r, q.r * 0.55, 0, 0, 7); ctx.fill(); ctx.restore(); }
+}
+function drawFX() {
+  for (const r of G.rings) { ctx.strokeStyle = `rgba(63,182,168,${r.a})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke(); }
+  for (const p of G.parts) { ctx.globalAlpha = 1 - p.t / p.life; ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const p of G.pops) {
+    ctx.globalAlpha = 1 - p.t / 1.1;
+    ctx.font = p.small ? `700 ${Math.round(18 * p.size)}px "JetBrains Mono", ui-monospace, monospace` : `800 ${Math.round(18 * p.size)}px "Bricolage Grotesque", sans-serif`;
+    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillText(p.text, p.x + 1, p.y + 2);
+    ctx.fillStyle = p.col; ctx.fillText(p.text, p.x, p.y);
+  }
+  ctx.globalAlpha = 1;
+  if (bannerT > 0) {
+    const a = Math.min(1, bannerT * 2, (2 - bannerT) * 4);
+    ctx.globalAlpha = a;
+    ctx.font = `800 ${clamp(W * 0.08, 34, 60)}px "Bricolage Grotesque", sans-serif`;
+    ctx.fillStyle = "#e8a33d"; ctx.fillText(bannerA, W / 2, H * 0.42);
+    ctx.font = `700 ${clamp(W * 0.035, 16, 22)}px "Bricolage Grotesque", sans-serif`;
+    ctx.fillStyle = "#efe3c6"; ctx.fillText(bannerB, W / 2, H * 0.42 + clamp(W * 0.06, 32, 48));
+    ctx.globalAlpha = 1;
+  }
+}
+
+function draw(t) {
+  ctx.save();
+  if (G && G.shake > 0) ctx.translate(rand(-1, 1) * G.shake * 14, rand(-1, 1) * G.shake * 8);
+  drawSky(t);
+  drawBgTrees();
+  hill(H * 0.74, 26, 0.007, "#10291f", 2);
+  for (let i = 0; i < TREES.length; i++) drawTrunk(i);
+  drawLanterns(t);
+  for (let i = 0; i < TREES.length; i++) drawCanopy(i, t);
+  drawGround(t);
+  for (let i = 0; i < TREES.length; i++) drawSign(i);
+  drawFlies(t);
+  if (G && (screen === "play" || screen === "bench" || screen === "perk" || screen === "pause")) {
+    drawGroundFX();
+    for (const f of G.fruits) drawFruit(f);
+    drawBasket(t);
+    drawFever(t);
+    drawFX();
+  }
+  ctx.restore();
+}
+
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  update(dt);
+  draw(now / 1000);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- HUD ---------- */
+const LEAF_SVG = c => `<svg class="leafi" viewBox="0 0 24 24"><path d="M4 20C4 10 10 4 20 4c0 10-6 16-16 16z" fill="${c}" stroke="#0b1618" stroke-width="1.2"/><path d="M5 19 15 9" stroke="#0b1618" stroke-width="1.2"/></svg>`;
+function updateHUD() {
+  if (!G) return;
+  $("hudScore").textContent = G.score.toLocaleString();
+  $("hudSeason").textContent = `Season ${G.season}`;
+  $("hudCombo").textContent = G.combo >= 2 ? `x${G.mult} · ${G.combo} streak` : `x${G.mult}`;
+  $("hudMeter").style.width = `${G.mult >= 5 ? 100 : (G.combo % 5) * 20}%`;
+  $("hudMeter").className = `m${G.mult}`;
+  let h = ""; for (let i = 0; i < Math.max(G.leaves, 3); i++) h += LEAF_SVG(i < G.leaves ? "#4fc08d" : "#2a3b36");
+  $("hudLeaves").innerHTML = h;
+}
+
+/* ---------- screens ---------- */
+const SCREENS = ["scrTitle", "scrHow", "scrBoard", "scrBench", "scrPerk", "scrPause", "scrOver"];
+function showScreen(id) {
+  SCREENS.forEach(s => $(s).classList.toggle("hidden", s !== id));
+  screen = id === null ? "play" : { scrTitle: "title", scrHow: "how", scrBoard: "board", scrBench: "bench", scrPerk: "perk", scrPause: "pause", scrOver: "over" }[id];
+}
+
+function setMode(m) {
+  mode = m; store.set("oo_mode", m);
+  $("segSL").classList.toggle("on", m === "SL"); $("segHL").classList.toggle("on", m === "HL");
+  $("segNote").textContent = m === "SL"
+    ? "SL: classes, objects, UML, static, constructors, encapsulation."
+    : "HL: all SL content + inheritance, polymorphism, abstraction, aggregation/composition, design patterns.";
+  $("bestLine").textContent = `Best on this device (${m}): ${store.get("oo_best_" + m, 0).toLocaleString()}`;
+  $("rankLine").innerHTML = rankHTML(bestEver());
+  renderMastery();
+}
+
+function renderSkins() {
+  const best = bestEver();
+  $("skinRow").innerHTML = SKINS.map(k => {
+    const ok = best >= k.need;
+    return `<button class="skin ${skin().id === k.id ? "on" : ""} ${ok ? "" : "locked"}" data-s="${k.id}" ${ok ? "" : "disabled"} title="${k.name}">
+      <span class="sw" style="background:linear-gradient(${k.top},${k.bot});border-top:4px solid ${k.rim}"></span>
+      <span class="sn">${ok ? k.name : "🔒 " + k.need.toLocaleString()}</span></button>`;
+  }).join("");
+  $("skinRow").querySelectorAll(".skin:not(.locked)").forEach(b => b.onclick = () => { sfx.tap(); skinId = b.dataset.s; store.set("oo_skin", skinId); renderSkins(); });
+}
+const RANKS = [[0, "Seedling"], [1500, "Sapling"], [4000, "Grower"], [8000, "Grafter"], [13000, "Orchard Keeper"], [20000, "Master Arborist"]];
+function rankHTML(score) {
+  let i = 0; while (i + 1 < RANKS.length && score >= RANKS[i + 1][0]) i++;
+  const nx = RANKS[i + 1];
+  if (!nx) return `Rank: <b>${RANKS[i][1]}</b> (top rank!)`;
+  const pct = clamp((score - RANKS[i][0]) / (nx[0] - RANKS[i][0]) * 100, 0, 100);
+  return `Rank: <b>${RANKS[i][1]}</b> · ${(nx[0] - score).toLocaleString()} to ${nx[1]}<div class="bar"><i style="width:${pct}%"></i></div>`;
+}
+const SUBS = [["B3.1.1", "class/obj"], ["B3.1.2", "UML"], ["B3.1.3", "static"], ["B3.1.4", "constructors"], ["B3.1.5", "encapsulation"], ["B3.2.1", "inheritance"], ["B3.2.2", "polymorphism"], ["B3.2.3", "abstraction"], ["B3.2.4", "agg/comp"], ["B3.2.5", "patterns"]];
+function renderMastery() {
+  const m = store.get("oo_mastery", {});
+  const subs = SUBS.filter(([c]) => mode === "HL" || c.startsWith("B3.1"));
+  $("mastery").innerHTML = subs.map(([c, n]) => { const k = Math.min(3, m[c] || 0); return `<span class="m${k}" title="${c}: ${k}/3 correct">${"★".repeat(k)}${"☆".repeat(3 - k)} ${n}</span>`; }).join("");
+}
+function goTitle() { G = null; $("hud").classList.add("hidden"); showScreen("scrTitle"); setMode(mode); renderSkins(); }
+
+function startGame() {
+  const name = $("inName").value.trim();
+  store.set("oo_name", name);
+  audio(); sfx.tap();
+  newRun();
+  startSeason();
+}
+
+function togglePause() {
+  if (screen === "play") { paused = true; showScreen("scrPause"); }
+  else if (screen === "pause") { paused = false; showScreen(null); lastT = performance.now(); }
+}
+
+/* ---------- question picking ---------- */
+function pickQuestion() {
+  const s = G.season;
+  const target = s <= 2 ? 1 : s <= 4 ? 2 : 3;
+  let pool = QUESTIONS.filter(q => (mode === "HL" || q.lvl === "SL") && !G.used.has(q.id));
+  if (!pool.length) { G.used.clear(); pool = QUESTIONS.filter(q => mode === "HL" || q.lvl === "SL"); }
+  // prefer target tier; HL mode leans to HL questions half the time
+  let best = pool.filter(q => q.tier === target);
+  if (mode === "HL") { const hl = best.filter(q => q.lvl === "HL"); if (hl.length && Math.random() < 0.55) best = hl; }
+  if (!best.length) best = pool.filter(q => q.tier <= target);
+  if (!best.length) best = pool;
+  const q = best[Math.floor(Math.random() * best.length)];
+  G.used.add(q.id);
+  return q;
+}
+
+/* ---------- bench ---------- */
+let Q = null, QS = null; // question, question state
+let forcedQ = null;
+function openBench() {
+  if (!G || G.leaves <= 0) return;
+  Q = forcedQ ? QUESTIONS.find(q => q.id === forcedQ) : pickQuestion();
+  forcedQ = null;
+  QS = {};
+  const tm = Q.topic.match(/^(\S+(?: \/ \S+)?) (.*)$/);
+  $("qTopic").innerHTML = `${Q.lvl === "HL" ? "HL · " : ""}${esc(tm ? tm[2] : Q.topic)}${tm ? `<small>${esc(tm[1])}</small>` : ""}`;
+  QS.golden = G.season % 3 === 0;
+  $("qTier").textContent = (QS.golden ? "★ Golden graft ×2 · " : "") + ["", "Easy", "Medium", "Hard"][Q.tier];
+  $("qTier").classList.toggle("golden", QS.golden);
+  $("qTier").dataset.t = Q.tier;
+  $("qPrompt").textContent = Q.prompt;
+  $("qFeedback").className = "feedback hidden";
+  $("btnCheck").classList.remove("hidden"); $("btnCheck").disabled = true;
+  $("btnNext").classList.add("hidden");
+  RENDER[Q.type]();
+  showScreen("scrBench");
+  $("scrBench").scrollTop = 0;
+}
+function setReady(ok) { $("btnCheck").disabled = !ok; $("checkHint").textContent = ok || QS.done ? "" : ({ sort: "Place every card to check", fill: "Fill every blank to check", order: "Pick every step to check", match: "Link every pair to check" })[Q.type] || ""; }
+
+const RENDER = {
+  sort() {
+    if (!QS.place) { QS.items = shuffle(Q.items.map((it, i) => ({ ...it, i }))); QS.place = {}; QS.sel = null; }
+    const body = $("qBody");
+    const chip = it => `<button class="chip ${it.code ? "code mono" : ""} ${QS.sel === it.i ? "sel" : ""}" data-i="${it.i}">${it.code ? esc(it.t) : esc(it.t)}</button>`;
+    const pool = QS.items.filter(it => QS.place[it.i] == null);
+    let h = `<div class="pool">${pool.map(chip).join("") || `<span class="fine">All placed. Tap a card to move it back.</span>`}</div>`;
+    h += `<div class="buckets b${Q.buckets.length}">`;
+    Q.buckets.forEach((name, bi) => {
+      h += `<div class="bucket ${QS.sel != null ? "target" : ""}" data-b="${bi}"><h4>${esc(name)}</h4>${QS.items.filter(it => QS.place[it.i] === bi).map(chip).join("")}</div>`;
+    });
+    h += `</div>`;
+    if (QS.sel == null && pool.length) h = `<p class="fine">Tap a card, then tap where it belongs.</p>` + h;
+    body.innerHTML = h;
+    body.querySelectorAll(".chip").forEach(el => el.onclick = e => {
+      e.stopPropagation(); if (QS.done) return; sfx.tap();
+      const i = +el.dataset.i;
+      QS.sel = QS.sel === i ? null : i; RENDER.sort();
+    });
+    body.querySelectorAll(".bucket").forEach(el => el.onclick = () => {
+      if (QS.done || QS.sel == null) return; sfx.tap();
+      QS.place[QS.sel] = +el.dataset.b; QS.sel = null; RENDER.sort();
+    });
+    setReady(Object.keys(QS.place).length === Q.items.length);
+  },
+  fill() {
+    if (!QS.vals) { QS.vals = Q.answers.map(() => null); QS.active = 0; QS.bank = shuffle(Q.bank.map((t, i) => ({ t, i }))); }
+    const body = $("qBody");
+    const code = Q.code.map(line => line.split(/\{(\d)\}/).map((seg, k) => {
+      if (k % 2 === 1) {
+        const n = +seg, v = QS.vals[n];
+        return `<span class="blank ${QS.active === n ? "active" : ""} ${QS.res ? (QS.res[n] ? "ok" : "no") : ""}" data-n="${n}">${v == null ? "&nbsp;?&nbsp;" : esc(QS.bank.find(b => b.i === v).t)}</span>`;
+      }
+      return hl(seg);
+    }).join("")).join("\n");
+    const used = new Set(QS.vals.filter(v => v != null));
+    body.innerHTML = `<div class="code">${code}</div><div class="bank">${QS.bank.map(b => `<button class="chip code mono" data-i="${b.i}" ${used.has(b.i) ? "disabled style='opacity:.3'" : ""}>${esc(b.t)}</button>`).join("")}</div>`;
+    body.querySelectorAll(".blank").forEach(el => el.onclick = () => {
+      if (QS.done) return; sfx.tap();
+      const n = +el.dataset.n; if (QS.vals[n] != null) QS.vals[n] = null; QS.active = n; RENDER.fill();
+    });
+    body.querySelectorAll(".bank .chip").forEach(el => el.onclick = () => {
+      if (QS.done) return; sfx.tap();
+      let n = QS.active; if (n == null || QS.vals[n] != null) n = QS.vals.findIndex(v => v == null);
+      if (n < 0) return;
+      QS.vals[n] = +el.dataset.i;
+      const nx = QS.vals.findIndex(v => v == null); QS.active = nx < 0 ? null : nx;
+      RENDER.fill();
+    });
+    setReady(QS.vals.every(v => v != null));
+  },
+  toggle() {
+    if (!QS.vis) {
+      do { QS.vis = Q.rows.map(() => Math.random() < 0.5 ? "+" : "-"); } while (QS.vis.every((v, i) => v === Q.rows[i].ans));
+    }
+    const body = $("qBody");
+    const row = (r, i) => `<div class="ur"><button class="vis ${QS.res ? (QS.res[i] ? "ok" : "no") : ""}" data-i="${i}">${QS.vis[i] === "-" ? "−" : "+"}</button><span>${esc(r.t)}${r.note ? `<span class="note">${esc(r.note)}</span>` : ""}</span></div>`;
+    const attrs = Q.rows.map((r, i) => [r, i]).filter(([r]) => r.attr), meths = Q.rows.map((r, i) => [r, i]).filter(([r]) => !r.attr);
+    body.innerHTML = `<div class="uml"><div class="uh">${esc(Q.cls)}</div>${attrs.map(([r, i]) => row(r, i)).join("")}<div class="usep"></div>${meths.map(([r, i]) => row(r, i)).join("")}</div><p class="fine" style="text-align:center">+ public &nbsp; − private</p>`;
+    body.querySelectorAll(".vis").forEach(el => el.onclick = () => {
+      if (QS.done) return; sfx.tap(); const i = +el.dataset.i; QS.vis[i] = QS.vis[i] === "+" ? "-" : "+"; RENDER.toggle();
+    });
+    setReady(true);
+  },
+  order() {
+    if (!QS.chips) { QS.chips = shuffle([...Q.seq, ...Q.extra].map((t, i) => ({ t, i }))); QS.picked = []; }
+    const body = $("qBody");
+    const cls = Q.code ? "chip code mono" : "chip";
+    let h = Q.pre ? `<div class="code">${Q.pre.map(hl).join("\n")}</div>` : "";
+    h += `<div class="slots">${QS.picked.length ? QS.picked.map((ci, k) => `<button class="${cls} ${QS.res ? (QS.res[k] ? "ok" : "no") : ""}" data-k="${k}"><span class="slot-num">${k + 1}</span>${esc(QS.chips.find(c => c.i === ci).t)}</button>`).join("") : `<span class="fine" style="padding:8px">Tap cards below in order…</span>`}</div>`;
+    h += `<div class="pool">${QS.chips.filter(c => !QS.picked.includes(c.i)).map(c => `<button class="${cls}" data-i="${c.i}">${esc(c.t)}</button>`).join("")}</div>`;
+    if (QS.res && QS.res.some(x => !x)) h += `<p class="fine">Correct order: ${Q.seq.map((s, k) => `<b>${k + 1}.</b> ${esc(s)}`).join(" &nbsp; ")}</p>`;
+    body.innerHTML = h;
+    body.querySelectorAll(".pool .chip").forEach(el => el.onclick = () => {
+      if (QS.done || QS.picked.length >= Q.seq.length) return; sfx.tap(); QS.picked.push(+el.dataset.i); RENDER.order();
+    });
+    body.querySelectorAll(".slots .chip").forEach(el => el.onclick = () => {
+      if (QS.done) return; sfx.tap(); QS.picked.splice(+el.dataset.k, 1); RENDER.order();
+    });
+    setReady(QS.picked.length === Q.seq.length);
+  },
+  pick() {
+    const body = $("qBody");
+    const skip = new Set(Q.skip || []);
+    body.innerHTML = `<div class="code" style="white-space:normal">${Q.lines.map((l, i) => `<span class="line ${skip.has(i) ? "skip" : ""} ${QS.res != null ? (i === Q.ans ? "ok" : (i === QS.res ? "no" : "")) : ""}" data-i="${i}" style="white-space:pre">${hl(l) || "&nbsp;"}</span>`).join("")}</div>`;
+    body.querySelectorAll(".line:not(.skip)").forEach(el => el.onclick = () => {
+      if (QS.done) return; const i = +el.dataset.i;
+      QS.res = i; finish(i === Q.ans || (Q.alsoOk || []).includes(i)); RENDER.pick();
+    });
+    $("btnCheck").classList.add("hidden");
+  },
+  match() {
+    if (!QS.left) { QS.left = shuffle(Q.pairs.map((p, i) => i)); QS.right = shuffle(Q.pairs.map((p, i) => i)); QS.link = {}; QS.sel = null; }
+    const COLS = ["#e8a33d", "#3fb6a8", "#c96f3b", "#a865b5", "#4fc08d"];
+    const colorOf = {}; Object.keys(QS.link).forEach((l, k) => colorOf[l] = COLS[k % COLS.length]);
+    const rightTaken = {}; Object.entries(QS.link).forEach(([l, r]) => rightTaken[r] = l);
+    const body = $("qBody");
+    let h = `<p class="fine">Tap a card on the left, then its partner on the right.</p><div class="match">`;
+    const n = Q.pairs.length;
+    for (let k = 0; k < n; k++) {
+      const li = QS.left[k], ri = QS.right[k];
+      const lc = colorOf[li], rl = rightTaken[ri], rc = rl != null ? colorOf[rl] : null;
+      const lres = QS.res ? (QS.link[li] === li ? "ok" : "no") : "";
+      const rres = QS.res ? (rl != null && +rl === ri ? "ok" : "no") : "";
+      h += `<button class="chip ${Q.codeLeft ? "code mono" : ""} ${QS.sel === li ? "sel" : ""} ${lres}" data-l="${li}" style="${lc ? `border-left:6px solid ${lc}` : ""}">${esc(Q.pairs[li][0])}${QS.res && QS.link[li] !== li ? `<span class="fix">→ ${esc(Q.pairs[li][1])}</span>` : ""}</button>`;
+      h += `<button class="chip ${Q.codeRight ? "code mono" : ""} ${rres}" data-r="${ri}" style="${rc ? `border-left:6px solid ${rc}` : ""}">${esc(Q.pairs[ri][1])}</button>`;
+    }
+    body.innerHTML = h + `</div>`;
+    body.querySelectorAll("[data-l]").forEach(el => el.onclick = () => {
+      if (QS.done) return; sfx.tap(); const li = +el.dataset.l;
+      if (QS.link[li] != null) delete QS.link[li];
+      QS.sel = QS.sel === li ? null : li; RENDER.match();
+    });
+    body.querySelectorAll("[data-r]").forEach(el => el.onclick = () => {
+      if (QS.done || QS.sel == null) return; sfx.tap(); const ri = +el.dataset.r;
+      for (const l in QS.link) if (QS.link[l] === ri) delete QS.link[l];
+      QS.link[QS.sel] = ri; QS.sel = null; RENDER.match();
+    });
+    setReady(Object.keys(QS.link).length === n);
+  }
+};
+
+const CHECK = {
+  sort() {
+    QS.res = true; let all = true;
+    $("qBody").querySelectorAll(".bucket .chip").forEach(el => {
+      const it = Q.items[+el.dataset.i]; const ok = QS.place[+el.dataset.i] === it.b;
+      el.classList.add(ok ? "ok" : "no"); if (!ok) { all = false; el.insertAdjacentHTML("beforeend", `<span class="fix">→ ${esc(Q.buckets[it.b])}</span>`); }
+    });
+    return all;
+  },
+  fill() { QS.res = QS.vals.map((v, n) => QS.bank.find(b => b.i === v).t === Q.answers[n]); const all = QS.res.every(Boolean);
+    RENDER.fill(); if (!all) $("qBody").insertAdjacentHTML("beforeend", `<p class="fine">Answer: ${Q.answers.map(a => `<code>${esc(a)}</code>`).join(", ")}</p>`); return all; },
+  toggle() { QS.res = QS.vis.map((v, i) => v === Q.rows[i].ans); RENDER.toggle(); return QS.res.every(Boolean); },
+  order() { QS.res = QS.picked.map((ci, k) => QS.chips.find(c => c.i === ci).t === Q.seq[k]); RENDER.order(); return QS.res.every(Boolean); },
+  match() { QS.res = true; RENDER.match(); return Q.pairs.every((p, i) => QS.link[i] === i); }
+};
+
+function check() {
+  if (QS.done) return;
+  const ok = CHECK[Q.type]();
+  finish(ok);
+}
+
+function finish(ok) {
+  QS.done = true; G.asked++; $("checkHint").textContent = "";
+  const fb = $("qFeedback");
+  let pts = 0;
+  if (ok) {
+    G.correct++; G.benchStreak++;
+    if (G.correct === 6 && G.leaves < 5) { G.leaves++; QS.aglow = true; }
+    pts = (200 * Q.tier + 100 * (G.benchStreak - 1)) * (QS.golden ? 2 : 1);
+    const ms = store.get("oo_mastery", {}); (Q.topic.match(/B3\.\d\.\d/g) || []).forEach(c => ms[c] = (ms[c] || 0) + 1); store.set("oo_mastery", ms);
+    G.score += pts;
+    sfx.right();
+    fb.className = "feedback good";
+    fb.innerHTML = `<b>Nice graft! +${pts}${G.benchStreak > 1 ? ` · bench streak ${G.benchStreak}` : ""}</b>${QS.aglow ? `<span class="lit">All 6 lanterns lit! Orchard aglow: +1 leaf</span>` : G.correct < 6 ? `<span class="lit">A lantern lights up (${G.correct}/6)</span>` : ""}${esc(Q.explain)}`;
+  } else {
+    G.benchStreak = 0; G.leaves--; G.missed.push({ topic: Q.topic.replace(/^\S+(?: \/ \S+)? /, ""), prompt: Q.prompt, explain: Q.explain });
+    sfx.wrong();
+    fb.className = "feedback bad";
+    fb.innerHTML = `<b>Not quite. −1 leaf</b>${esc(Q.explain)}`;
+  }
+  QS.ok = ok;
+  updateHUD();
+  $("btnCheck").classList.add("hidden");
+  $("btnNext").classList.remove("hidden");
+  $("btnNext").textContent = G.leaves <= 0 ? "See results" : ok ? "Pick a perk" : "Next season";
+  setTimeout(() => fb.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+}
+
+function afterBench() {
+  if (G.leaves <= 0) return endRun();
+  if (QS.ok) openPerks(); else startSeason();
+}
+
+/* ---------- perks ---------- */
+function openPerks() {
+  const avail = PERKS.filter(p => !(p.id === "leaf" && G.leaves >= 5));
+  const choice = shuffle(avail).slice(0, 3);
+  $("perkList").innerHTML = choice.map(p => `<button class="perk" data-p="${p.id}"><span class="pi">${p.icon}</span><span><b>${p.name}${G.perks[p.id] ? ` (lv ${G.perks[p.id] + 1})` : ""}</b><span>${p.desc}</span></span></button>`).join("");
+  $("perkList").querySelectorAll(".perk").forEach(el => el.onclick = () => {
+    const id = el.dataset.p; sfx.gold();
+    if (id === "leaf") G.leaves = Math.min(5, G.leaves + 1); else G.perks[id]++;
+    startSeason();
+  });
+  showScreen("scrPerk");
+}
+
+/* ---------- end ---------- */
+function endRun() {
+  if (!G || screen === "over") return;
+  const name = (store.get("oo_name", "") || "Anonymous").slice(0, 16);
+  const bestKey = "oo_best_" + mode, prev = store.get(bestKey, 0), everBefore = bestEver();
+  const isBest = G.score > prev;
+  if (isBest) store.set(bestKey, G.score);
+  const board = store.get("oo_board", []);
+  const stamp = Date.now();
+  board.push({ name, score: G.score, mode, season: G.season, d: stamp });
+  store.set("oo_last", stamp);
+  board.sort((a, b) => b.score - a.score);
+  store.set("oo_board", board.slice(0, 100));
+  $("finalScore").textContent = G.score.toLocaleString();
+  $("finalRank").innerHTML = rankHTML(Math.max(everBefore, G.score));
+  $("finalBest").textContent = isBest ? "New personal best on this device!" : `Best (${mode}): ${prev.toLocaleString()}`;
+  const unlocked = SKINS.filter(k => k.need > everBefore && k.need <= G.score);
+  const next = SKINS.find(k => k.need > Math.max(everBefore, G.score));
+  $("finalUnlock").innerHTML = unlocked.length
+    ? `🔓 Unlocked: <b>${unlocked.map(k => k.name).join(", ")}</b> basket! Pick it on the menu.`
+    : next ? `Next basket unlock at <b>${next.need.toLocaleString()}</b>` : `Every basket unlocked. Legend.`;
+  $("finalName").textContent = `Saved to leaderboard as ${name}`;
+  $("finalStats").innerHTML = `<div><b>${G.season}</b>seasons</div><div><b>${G.correct}/${G.asked}</b>bench puzzles</div><div><b>${G.caught}</b>objects caught</div><div><b>${G.maxCombo}</b>best streak</div>`;
+  $("finalReview").classList.toggle("hidden", !G.missed.length);
+  $("finalReview").innerHTML = G.missed.length ? `<h4>Review what you missed</h4>` + G.missed.map(m => `<div><b>${esc(m.topic)}</b>${esc(m.explain)}</div>`).join("") : "";
+  $("hud").classList.add("hidden");
+  setTimeout(() => showScreen("scrOver"), 0);
+}
+
+function renderBoard(m) {
+  const list = store.get("oo_board", []).filter(r => r.mode === m).slice(0, 10);
+  $("boardSeg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.m === m));
+  $("boardList").innerHTML = list.length ? list.map((r, i) => `<li class="${r.d === store.get("oo_last", 0) ? "me" : ""}"><span><b>${i + 1}.</b> ${esc(r.name)}</span><span>${r.score.toLocaleString()} · S${r.season}</span></li>`).join("") : `<li><span class="fine">No scores yet. Be the first!</span></li>`;
+}
+
+/* ---------- wire up ---------- */
+let boardBack = "scrTitle";
+$("inName").value = store.get("oo_name", "");
+$("segSL").onclick = () => { sfx.tap(); setMode("SL"); };
+$("segHL").onclick = () => { sfx.tap(); setMode("HL"); };
+$("btnPlay").onclick = startGame;
+$("btnHow").onclick = () => showScreen("scrHow");
+$("btnBoard").onclick = () => { boardBack = "scrTitle"; renderBoard(mode); showScreen("scrBoard"); };
+$("btnOverBoard").onclick = () => { boardBack = "scrOver"; renderBoard(mode); showScreen("scrBoard"); };
+$("boardSeg").querySelectorAll("button").forEach(b => b.onclick = () => renderBoard(b.dataset.m));
+document.querySelectorAll("[data-back]").forEach(b => b.onclick = () => { if (boardBack === "scrOver" && screen === "board") showScreen("scrOver"); else goTitle(); });
+$("btnCheck").onclick = check;
+$("btnNext").onclick = afterBench;
+$("btnPause").onclick = togglePause;
+$("btnResume").onclick = togglePause;
+$("btnQuit").onclick = () => { paused = false; endRun(); };
+$("btnMute").textContent = `Sound: ${muted ? "off" : "on"}`;
+$("btnMute").onclick = () => { muted = !muted; store.set("oo_muted", muted); $("btnMute").textContent = `Sound: ${muted ? "off" : "on"}`; };
+$("btnAgain").onclick = startGame;
+$("btnMenu").onclick = goTitle;
+document.addEventListener("visibilitychange", () => { if (document.hidden && screen === "play") togglePause(); });
+
+resize();
+goTitle();
+requestAnimationFrame(loop);
+
+// test hook
+window.__OO = { get G() { return G; }, get screen() { return screen; }, openBench, startGame, check, get Q() { return Q; }, get QS() { return QS; }, RENDER, endRun, setMode, force(id) { forcedQ = id; } };
+})();
+
+</script>
+
+</body></html>
